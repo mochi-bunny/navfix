@@ -69,10 +69,10 @@ curl -X POST http://127.0.0.1:8787/events \
 
 ### Hourly telemetry (`POST /telemetry`)
 
-The supervisor sends one CSV per hour, with one row per robot. navbot posts a health table to `#monitor-bot` and attaches the raw CSV.
+The supervisor sends one CSV per hour, with one row per robot. navbot posts a health table to `#monitor-bot`. No file is attached; the raw CSV is saved in `data/bot.db`.
 
 - **Body:** raw CSV, `Content-Type: text/csv`, `X-Bot-Key` header.
-- **Columns navbot reads:** `robot` (required), `site`, `status`, `in_use`, `battery_pct`, `temp_c`, `errors_1h`, `last_seen`. Other columns are kept in the attached CSV.
+- **Columns navbot reads:** `robot` (required), `site`, `status`, `in_use`, `battery_pct`, `temp_c`, `errors_1h`, `last_seen`. Other columns are kept in the raw CSV saved in `data/bot.db`.
 - **In use:** if an `in_use` column is present, only rows with `1`, `yes` or `true` are shown.
 - **Health:**
 
@@ -110,7 +110,7 @@ curl -X POST http://127.0.0.1:8787/telemetry -H 'X-Bot-Key: change-me' -H 'Conte
   - **Throughput:** picks, deliveries and charges.
   - **Congestion:** traffic waits and how often the pack stations were full.
   - **Stock mismatches:** bins the system counted as stocked but the robot found empty.
-- **Attachment:** a CSV of the latest snapshot. The full log is too big for Discord.
+- **No attachment:** the post is the card only. Every snapshot row is saved in the `fleet_snapshots` table instead.
 - **Health:**
 
   | Health | Rule |

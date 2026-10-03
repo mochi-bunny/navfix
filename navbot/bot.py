@@ -2,7 +2,6 @@
 posts them, records every request in #approvals, and sends approver-only decisions back.
 Everything that happens through the bot is recorded in the activity table (store.py)."""
 import asyncio
-import io
 import json
 import logging
 import os
@@ -200,12 +199,9 @@ class OpsBot(discord.Client):
                 fleet = fleetlog.parse(text)
                 checked = fleetlog.assess(fleet)
                 embed = fleetlog.build(fleet, checked, now)
-                attachment = discord.File(io.BytesIO(fleetlog.snapshot_csv(fleet).encode()),
-                                          filename=f"fleet-snapshot-{now:%Y%m%d-%H%M}.csv")
             else:
                 checked = telemetry.assess(text)
                 embed = telemetry.build(checked, now)
-                attachment = None
         except (telemetry.TelemetryError, fleetlog.FleetLogError) as exc:
             return self._reject("telemetry_rejected", str(exc), 400)
         except Exception as exc:  # malformed CSV or a log missing expected fields
@@ -216,7 +212,7 @@ class OpsBot(discord.Client):
         if channel is None:
             return self._reject("telemetry_failed", "channel not visible: monitor-bot (set CH_MONITOR_BOT)", 500)
         try:
-            message = await channel.send(embed=embed, **({"file": attachment} if attachment else {}))
+            message = await channel.send(embed=embed)  # card only; the raw data stays in data/bot.db
         except discord.HTTPException as exc:
             log.exception("Discord rejected the telemetry post")
             return self._reject("telemetry_failed", f"discord error: {exc}", 502)

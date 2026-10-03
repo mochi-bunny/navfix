@@ -27,6 +27,7 @@
     "clock":    { "base_url": "http://127.0.0.1:7000" },
     "field":    { "base_url": "http://127.0.0.1:7003" },
     "messages": { "jsonl_path": "../shared/messages.jsonl", "url": null },
+    "navbot":   { "db_path": "../navbot/data/bot.db" },
     "feeds": {
       "url": null,
       "list": []

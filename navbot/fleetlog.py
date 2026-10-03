@@ -5,8 +5,6 @@ events (what happened, with t = seconds since the run started) and snapshots (ev
 The card shows the latest snapshot as a table, plus what happened during the window.
 Every number on the card comes from the log; code only decides OK / WARN / DOWN.
 """
-import csv
-import io
 import json
 from datetime import datetime, timedelta
 
@@ -269,20 +267,6 @@ def build(log: dict, checked: list, received_at: datetime) -> discord.Embed:
     e.add_field(name="🧮 Stock mismatches", value=formatter._v("\n".join(stock[:8]) or "None ✅"), inline=False)
 
     e.set_footer(text=f"Down = DRIVE_FAULT or OVERHEAT · Warn = battery <{CHARGE_SOON_PCT}% and not charging, "
-                      f"≥{HOT_TEMP_C}°C, BIN_EMPTY/LOW_BATTERY, or stuck {STUCK_WAIT_S}s+ · snapshot CSV attached")
+                      f"≥{HOT_TEMP_C}°C, BIN_EMPTY/LOW_BATTERY, or stuck {STUCK_WAIT_S}s+")
     return e
 
-
-def snapshot_csv(log: dict) -> str:
-    """Latest snapshot as a small CSV to attach to the card (the full log is too big for Discord)."""
-    clock = Clock(log.get("meta", {}))
-    snap = log["snapshots"][-1]
-    buf = io.StringIO()
-    w = csv.writer(buf)
-    w.writerow(["time", "robot", "zone", "task", "job_id", "x", "y", "vel", "battery", "temp", "error",
-                "carrying", "yielding", "waiting_s"])
-    for r in snap["robots"]:
-        w.writerow([clock(snap["t"]), robot_name(r["id"]), r.get("zone"), r.get("task"), r.get("job_id"),
-                    r.get("x"), r.get("y"), r.get("vel"), r.get("battery"), r.get("temp"), r.get("error"),
-                    r.get("carrying"), r.get("yielding"), r.get("waiting_s")])
-    return buf.getvalue()

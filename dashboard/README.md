@@ -27,6 +27,16 @@ each source's mode and health. A source that goes down keeps its last good data 
 
 Live endpoints, paths and field names are in **[INTERFACES.md](INTERFACES.md)**, the file to hand to the team.
 
+### Fleet data from the Discord bot (`--navbot`)
+
+```bash
+python3 run.py --navbot
+```
+
+This reads Needs, skill gates, commissioning, warehouse/robots and the ops log from navbot's database
+(`live.navbot.db_path`, default `../navbot/data/bot.db`), read-only. Calendar, clock, system and feeds keep
+following `mode`. **[METRICS.md](METRICS.md)** lists every metric, how it's calculated, and which navbot data feeds it.
+
 ## Views (each has its own URL; keys work while recording)
 
 **Home (`/`) is the command center**, everything on one screen:
