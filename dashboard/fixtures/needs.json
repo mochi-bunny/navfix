@@ -1,0 +1,53 @@
+{
+  "_comment": "Ticket-service seed. 'needs' are templates; the mock story (script.json) opens and advances them. T-11 is an extra P3 example (consumables) that is not in the brief; delete it here and in script.json if unwanted.",
+  "needs": {
+    "T-11": {
+      "need_id": "T-11",
+      "source": "fleet.consumables",
+      "kind": "consumables_low",
+      "title": "Acme cell: boxes run out in ~30 h",
+      "severity": "P3",
+      "site": "acme",
+      "skill_req": null,
+      "deadline": "2026-10-04T17:00",
+      "duration_min": 10,
+      "bring": ["boxes (2 bundles)", "packing tape"],
+      "evidence": { "clips": [], "consumable": "boxes", "runout": "2026-10-04T13:30" }
+    },
+    "T-12": {
+      "need_id": "T-12",
+      "source": "fleet.reliability",
+      "kind": "skill_unproven",
+      "title": "Globex cell can't do open_middle_drawer (1 of 10 trials)",
+      "severity": "P1",
+      "site": "globex",
+      "skill_req": "open_middle_drawer",
+      "staff_skill": "commissioning",
+      "deadline": "17:00",
+      "duration_min": 45,
+      "bring": ["drawer gripper pads", "calibration target"],
+      "evidence": {
+        "clips": [
+          "globex_open_middle_drawer_trial_03.mp4",
+          "globex_open_middle_drawer_trial_07.mp4"
+        ],
+        "trials_run": 10,
+        "successes": 1,
+        "target_rate": 0.8,
+        "orders_blocked": 40,
+        "policy": "drawer-base"
+      }
+    }
+  },
+  "bookings": {
+    "T-12": {
+      "staff_id": "s1",
+      "event": { "id": "V1", "staff_id": "s1", "title": "T-12 commissioning · Globex", "type": "visit", "start": "15:00", "end": "15:45", "place": "globex", "site": "globex", "need_id": "T-12" },
+      "alternatives": [
+        { "start": "13:00", "end": "13:45", "staff_id": "s2", "extra_travel_min": 48, "note": "Sam, from Acme; misses lunch handoff" },
+        { "start": "16:10", "end": "16:55", "staff_id": "s1", "extra_travel_min": 10, "note": "Moves Initech pitch (P1 only), ends 5 min before deadline" }
+      ],
+      "score": { "extra_travel_min": 0, "minutes_past_earliest": 0, "deadline_margin_min": 75, "moves": 0 }
+    }
+  }
+}

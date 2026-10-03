@@ -1,0 +1,115 @@
+# Fleet & Field dashboard
+
+A dashboard for the recorded demo: each person's day plan, plus what Fleet sees. It runs entirely on the GB10: Python 3.9+ standard library
+on the server, plain JS/CSS in the browser. There is nothing to install, no CDN, no remote fonts, and no LLM calls.
+
+## Start (one command)
+
+```bash
+python3 run.py
+```
+
+Open http://localhost:8090. The demo controls are at http://localhost:8090/control.
+
+## Mock vs live
+
+`config.json` → `"mode": "mock"` or `"live"`. You can also override it at startup without editing the file:
+
+```bash
+python3 run.py --mode live        # or: DASH_MODE=live python3 run.py
+```
+
+To go live one source at a time, set that source in `"sources"`, e.g. `"tickets": "live"` with everything
+else `null` (follows `mode`). The header shows **MOCK DATA** while any source is mocked, and `/proof` lists
+each source's mode and health. A source that goes down keeps its last good data and shows an
+"offline" badge, so a recording never goes blank.
+
+Live endpoints, paths and field names are in **[INTERFACES.md](INTERFACES.md)**, the file to hand to the team.
+
+## Views (each has its own URL; keys work while recording)
+
+**Home (`/`) is the simple plan:** just the viewer's day, plus two controls. **+ Add change** adds a new event
+or moves/renames one already in the plan; Field checks for conflicts first. The **menu** switches to the
+**Full view** or to another person. The full view's "Simple view" button comes back here, and the choice is
+remembered (also in Settings → Home page).
+
+In the full view, the left rail has the main pages, then the staff avatars (click one to view as that person), then Settings.
+
+| Key | URL | View |
+|---|---|---|
+| m | `/` | Simple plan (or the full view if the viewer chose it) |
+| 1 | `/day` | **My day**: the viewer's own plan, the simplest layout (Plan list or Timeline), travel between events, a "now" marker. **Updates** button (top right) lists plan changes this person hasn't seen yet |
+| 2 | `/calendar` | Team calendar, all staff |
+| 3 | `/needs` | Needs feed |
+| f | `/fleet` | **Fleet watch**: what Fleet is surveying (sites, robots, skill gates, commissioning) and which signals made it into the plan |
+| u | `/fleet-updates` | **Fleet updates**: everything Fleet posted or did, newest first |
+| h | `/changes` | **Changes**: full change log (bookings, MBTA delays, reschedules, edits) with **Edit** and **Revert** |
+| 9 | `/ops` | Ops log + Discord mirror |
+| p | `/proof` | Local proof: vLLM, model, GPU memory, services, cloud model calls |
+| s | `/settings` | Appearance (theme, accent, density, 12/24h, highlight, default plan layout) and Account |
+| 4 | `/need`, `/needs/T-12` | Need detail: clips, trial stats, calendar block, timeline |
+| 5 6 7 8 0 | `/reliability` `/commissioning` `/warehouse` `/leg` `/discord` | Single views full screen |
+| c | `/control` | Demo control panel (not in the rail) |
+
+Open a drawer straight from the URL: `/?add=1` (Add change), `/?menu=1` (open the menu), `/?event=E4`
+(event details + edit), `/day?updates=1` (updates list), `/?user=s2` (view as Sam). Esc closes a drawer.
+
+The sim clock and a one-line local-proof strip are on every page. Anything that just appeared or changed
+(a booked visit, a status change, a new log line) is briefly highlighted.
+
+**Edits:** clicking an event (My day, search, or Edit in the change log) opens its details with an edit form.
+Saving or reverting asks for confirmation, then goes to **Field** (`POST /events/{id}`,
+`POST /changes/{id}/revert`). Field stays the only writer to the calendar, re-checks travel and notifies
+people. In mock mode the mock applies the change itself. The person you're viewing as, settings, and
+"seen" markers are kept per browser in localStorage.
+
+## Mock demo day (what plays when)
+
+In mock mode the whole day is scripted on the sim clock (`fixtures/script.json`). State is rebuilt from
+scratch for any clock time, so jumping the clock back and forth is safe.
+
+| Sim time | Scene |
+|---|---|
+| 08:05 | T-11 attached to the Acme pitch (change log: "Need attached") |
+| 08:45 | 1 Morning brief in #field |
+| 11:50 | Client dinner rescheduled 7:00 → 7:30 PM; leave-by moves to 7:04 (change log: "Rescheduled") |
+| 09:12 | 2 "how many pitches today?" → 3 |
+| 12:40 | 3 Fleet opens **T-12** (P1, Globex open_middle_drawer 1/10, 40 drawer orders held) |
+| 12:41–12:43 | 4 Field proposes 3:00–3:45, Jordan taps ✅, the **V1** block appears on the calendar |
+| 13:25 | 5 Departure check: Red Line +12 → "leave now or taxi"; 13:27 choice applied, ETA 2:07 PM in #cell-globex |
+| 15:00 | 6 Arrived → commissioning from 15:02; bad policy dropped at its 8th trial; **gate opens at trial 29 (~15:26)** |
+| 15:29 / 15:32 | T-12 closed, order G-4471 shipped, backlog drains |
+| 18:00 | 7 Recap in #field |
+
+**Fire T-12** and **Inject delay** on `/control` move those beats to "now". With `"auto": false` in
+`script.json`, those beats only happen when fired from the panel. **Reset** puts the clock back to 08:30 at ×1.
+
+Recording tip: set the clock to 2–3 minutes before a scene at ×60, then let it run.
+
+## Styling and layout (Amal)
+
+- `web/theme.css` is the **only** place for colours, type, spacing and highlight timing (CSS variables).
+  Dark is the default (gradient day-plan card, a colour per event type). The `[data-theme="light"]` and
+  `[data-density="compact"]` blocks are what Settings switches to.
+- `web/base.css` holds structure only and reads the variables.
+- `web/layout.js` sets routes, nav order, which views share a page, and keyboard keys. Page grids are
+  `.layout-<name>` classes in `base.css`.
+- Each view in `web/views/*.js` returns plain HTML with stable class names. Restyle freely without touching logic.
+
+## Files
+
+```
+run.py                 one-command start
+config.json            mode flag, ports, live endpoints and paths
+INTERFACES.md          every assumed endpoint and field (hand to the team)
+fixtures/              demo day: calendar, needs, cell/warehouse, mock story script
+server/app.py          HTTP server, demo controls, clip streaming
+server/snapshot.py     reads all adapters in the background, normalises, derives links
+server/adapters/       one adapter per source: live.py, mock.py (+ mock_world.py)
+web/                   index.html, app.js (shell/router/poller), state.js (viewer, settings, seen, drawer),
+                       drawers.js (event edit, updates), icons.js, theme.css, base.css, layout.js, views/
+```
+
+Clips: put MP4s under `live.cell.clips_root` and list their file names in a Need's `evidence.clips`.
+No clips ship with the mock, so the Need page shows a "clip not found" placeholder until you drop the
+MP4s named in `fixtures/needs.json` into `fixtures/clips/`.

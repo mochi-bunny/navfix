@@ -1,0 +1,45 @@
+{
+  "mode": "mock",
+  "sources": {
+    "tickets": null,
+    "calendar": null,
+    "cell": null,
+    "clock": null,
+    "messages": null,
+    "system": null
+  },
+  "host": "0.0.0.0",
+  "port": 8090,
+  "poll_ms": 1000,
+  "demo": {
+    "date": "2026-10-03",
+    "start_time": "08:30",
+    "tz": "America/New_York",
+    "tz_offset": "-04:00",
+    "spotlight_staff": "s1",
+    "channels": ["field", "cell-globex", "cell-acme", "ops-log"]
+  },
+  "live": {
+    "tickets":  { "base_url": "http://127.0.0.1:7001" },
+    "calendar": { "sqlite_path": "../field/field.db" },
+    "cell":     { "base_url": "http://127.0.0.1:7002", "clips_root": "../fleet/clips" },
+    "clock":    { "base_url": "http://127.0.0.1:7000" },
+    "field":    { "base_url": "http://127.0.0.1:7003" },
+    "messages": { "jsonl_path": "../shared/messages.jsonl", "url": null },
+    "system": {
+      "vllm_url": "http://127.0.0.1:8000",
+      "expected_model": "Qwen3.6-35B-A3B NVFP4",
+      "gpu_total_gb": 128,
+      "services": [
+        { "name": "vLLM",            "host": "127.0.0.1", "port": 8000, "http": "/v1/models" },
+        { "name": "GR00T server A",  "host": "127.0.0.1", "port": 5555 },
+        { "name": "GR00T server B",  "host": "127.0.0.1", "port": 5556 },
+        { "name": "OpenTripPlanner", "host": "127.0.0.1", "port": 8080 },
+        { "name": "Ticket service",  "host": "127.0.0.1", "port": 7001 },
+        { "name": "Sim clock",       "host": "127.0.0.1", "port": 7000 }
+      ],
+      "egress_counter_url": null,
+      "egress_counter_file": null
+    }
+  }
+}

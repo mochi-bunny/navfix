@@ -1,0 +1,51 @@
+{
+  "_comment": "Fleet / cell-service seed. Confidence = P(true success rate >= target) under a Beta(1,1) prior; in mock mode the mock cell service computes it, the UI never does.",
+  "target_rate": 0.8,
+  "gate_threshold": 0.95,
+  "reliability": [
+    { "site": "acme",   "skill": "pick_place_box",     "policy": "box-v4",      "trials": 120, "successes": 117, "last_tested": "2026-10-02T16:10" },
+    { "site": "acme",   "skill": "open_top_drawer",    "policy": "drawer-ft-v2","trials": 60,  "successes": 58,  "last_tested": "2026-10-02T16:40" },
+    { "site": "acme",   "skill": "close_drawer",       "policy": "drawer-ft-v2","trials": 40,  "successes": 40,  "last_tested": "2026-10-02T17:05" },
+    { "site": "globex", "skill": "pick_place_box",     "policy": "box-v4",      "trials": 80,  "successes": 78,  "last_tested": "2026-10-03T07:30" },
+    { "site": "globex", "skill": "open_middle_drawer", "policy": "drawer-base", "trials": 10,  "successes": 1,   "last_tested": "2026-10-03T12:35" },
+    { "site": "globex", "skill": "close_drawer",       "policy": "box-v4",      "trials": 30,  "successes": 29,  "last_tested": "2026-10-03T07:50" }
+  ],
+  "commissioning": {
+    "need_id": "T-12",
+    "site": "globex",
+    "skill": "open_middle_drawer",
+    "start_delay_min": 2,
+    "trial_interval_sec": 50,
+    "min_trials_before_drop": 8,
+    "drop_below": 0.05,
+    "policies": [
+      { "id": "A", "name": "drawer-ft-v2" },
+      { "id": "B", "name": "drawer-base+pads" }
+    ],
+    "_sequence_comment": "Thompson-sampling order and outcomes, scripted. B: 3/8 then dropped. A: 20/21, gate opens on its 21st trial (global trial 29).",
+    "sequence": [
+      ["A",1],["B",1],["A",1],["B",0],["A",1],["B",0],["B",1],["A",0],
+      ["A",1],["B",0],["A",1],["B",0],["A",1],["B",1],["A",1],["B",0],
+      ["A",1],["A",1],["A",1],["A",1],["A",1],["A",1],["A",1],["A",1],
+      ["A",1],["A",1],["A",1],["A",1],["A",1],["A",1],["A",1],["A",1]
+    ]
+  },
+  "warehouse": [
+    {
+      "site": "acme", "name": "Acme", "area": "Back Bay", "robots_total": 10, "robots_active": 10,
+      "throughput_base": 210, "backlog_base": 12,
+      "consumables": [
+        { "item": "boxes",        "runout": "2026-10-04T13:30", "need_id": "T-11" },
+        { "item": "gripper pads", "runout": "2026-10-09T10:00", "need_id": null }
+      ]
+    },
+    {
+      "site": "globex", "name": "Globex", "area": "Kendall Square", "robots_total": 10, "robots_active": 10,
+      "throughput_base": 180, "backlog_base": 8, "drawer_backlog_at_need": 40,
+      "consumables": [
+        { "item": "boxes",        "runout": "2026-10-06T09:00", "need_id": null },
+        { "item": "gripper pads", "runout": "2026-10-05T10:00", "need_id": null }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+/* ==========================================================================
+   THEME: the single place for styling decisions (CSS variables only).
+   Dark is the default; [data-theme="light"] overrides it. The Settings page
+   switches theme, accent and density by setting attributes on <html>.
+   ========================================================================== */
+:root {
+  color-scheme: dark;
+
+  /* Type: local fonts only (the box is offline). The first match wins. */
+  --font-sans: "Barlow", "Outfit", "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-base: 15px;
+  --fs-lg: 19px;
+  --fs-xl: 26px;
+  --fs-hero: 56px;
+  --fw-normal: 400;
+  --fw-strong: 600;
+
+  /* Surfaces & ink */
+  --bg: #0b0b10;
+  --app-bg: #15151b;
+  --surface: #1e1e26;
+  --surface-2: #272731;
+  --surface-3: #31313d;
+  --border: rgba(255, 255, 255, 0.07);
+  --text: #f3f3f7;
+  --text-2: #b6b6c6;
+  --text-muted: #7c7c8e;
+  --accent: #8b7cf6;
+  --accent-ink: #ffffff;
+  --accent-soft: color-mix(in srgb, var(--accent) 22%, transparent);
+  --link: #b3a8ff;
+
+  /* Hero card (the gradient panel holding the day plan) */
+  --hero: linear-gradient(135deg, #8d83f2 0%, #b49bf0 42%, #ecaacb 100%);
+  --hero-text: #1b1930;
+  --hero-text-2: rgba(27, 25, 48, 0.68);
+  --hero-glass: rgba(255, 255, 255, 0.5);
+  --hero-glass-2: rgba(255, 255, 255, 0.28);
+
+  /* Event categories (plan cards, team calendar) */
+  --cat-standup: #3d9bf0;
+  --cat-pitch: #6a57e8;
+  --cat-lunch: #f5a524;
+  --cat-dinner: #f5a524;
+  --cat-visit: #ec5f9c;
+  --cat-maintenance: #3d9bf0;
+  --cat-office: #6c6c86;
+  --cat-meeting: #2fa58a;
+  --cat-default: #6c6c86;
+  --cat-ink: #ffffff;
+
+  /* Avatars */
+  --avatar-1: #f5a524;
+  --avatar-2: #ec5f9c;
+  --avatar-3: #3d9bf0;
+  --avatar-4: #2fbf8f;
+  --avatar-5: #8b7cf6;
+
+  /* Status (reserved: health, gate, service up/down) */
+  --good: #22c55e;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #ef4f4f;
+  --sev-p1: var(--critical);
+  --sev-p2: var(--serious);
+  --sev-p3: #6c6c86;
+
+  /* Charts */
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --grid: rgba(255, 255, 255, 0.07);
+  --axis: rgba(255, 255, 255, 0.22);
+  --threshold: #f3f3f7;
+
+  /* Team calendar */
+  --ev-bg: var(--surface-3);
+  --ev-border: transparent;
+  --ev-need-bg: color-mix(in srgb, var(--cat-visit) 22%, transparent);
+  --ev-need-border: var(--cat-visit);
+  --leg-transit: #9a9ab0;
+  --leg-walk: #6c6c86;
+  --leg-car: #9a9ab0;
+  --leg-late: var(--critical);
+  --now-line: #ff6b8b;
+
+  /* Shape & rhythm */
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 26px;
+  --gap: 16px;
+  --pad: 18px;
+  --rail-w: 92px;
+  --header-h: 68px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+
+  /* Highlight for items that just appeared or changed */
+  --flash: color-mix(in srgb, var(--accent) 45%, transparent);
+  --flash-ms: 4000ms;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #e7e6f0;
+  --app-bg: #f6f5fb;
+  --surface: #ffffff;
+  --surface-2: #f0eff7;
+  --surface-3: #e4e2ef;
+  --border: rgba(20, 18, 40, 0.08);
+  --text: #17161f;
+  --text-2: #4e4c60;
+  --text-muted: #85839a;
+  --link: #5b4be0;
+  --grid: rgba(20, 18, 40, 0.08);
+  --axis: rgba(20, 18, 40, 0.25);
+  --threshold: #17161f;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --leg-transit: #6b6a80;
+  --leg-walk: #a3a1b8;
+  --leg-car: #6b6a80;
+  --shadow: 0 10px 30px rgba(40, 30, 90, 0.08);
+}
+
+:root[data-density="compact"] {
+  --fs-base: 14px;
+  --fs-lg: 17px;
+  --fs-xl: 22px;
+  --gap: 10px;
+  --pad: 12px;
+}

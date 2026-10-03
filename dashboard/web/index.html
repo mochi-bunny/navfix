@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fleet &amp; Field</title>
+  <link rel="stylesheet" href="/static/theme.css">
+  <link rel="stylesheet" href="/static/base.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="rail">
+      <a class="rail-logo" href="/" data-nav title="Fleet &amp; Field"></a>
+      <nav id="rail-nav" class="rail-nav"></nav>
+      <div class="rail-sep"></div>
+      <div id="rail-users" class="rail-users"></div>
+      <div class="rail-spacer"></div>
+      <nav id="rail-bottom" class="rail-nav"></nav>
+    </aside>
+    <div class="frame">
+      <header class="topbar">
+        <div class="search">
+          <input id="search" type="search" placeholder="Search events, Needs, people" autocomplete="off">
+          <span id="search-icon" class="search-icon"></span>
+          <div id="search-results" class="search-results" hidden></div>
+        </div>
+        <div id="badges" class="badges"></div>
+        <div id="clock" class="clock" title="Simulated clock">
+          <span id="clock-time" class="clock-time">--:--</span>
+          <span id="clock-date" class="clock-date"></span>
+          <span id="clock-speed" class="clock-speed"></span>
+        </div>
+        <div id="top-icons" class="top-icons"></div>
+        <div id="hello" class="hello"></div>
+      </header>
+      <main id="main" class="layout"></main>
+      <footer id="proof-strip" class="proof-strip"></footer>
+    </div>
+  </div>
+  <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+  <aside id="drawer" class="drawer" hidden></aside>
+  <div id="toast" class="toast" hidden></div>
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>

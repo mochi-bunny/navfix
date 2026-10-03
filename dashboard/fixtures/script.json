@@ -1,0 +1,130 @@
+{
+  "_comment": "Mock story for the demo day. Every beat fires at an anchor + offset_min on the SIM clock. State is recomputed from scratch each tick, so setting the clock backwards replays cleanly. Anchors: 'day' = midnight of the demo date (use 'at': 'HH:MM'); 't12' = T-12 opened (fired from the control panel or auto at its default); 'delay' = MBTA departure check; 'arrived' = engineer taps Arrived; 'gate' = commissioning gate opens (derived from cell.json). With auto=false, t12 and delay only happen when fired from the control panel. Text placeholders in {braces} are filled in by the mock.",
+  "auto": true,
+  "anchors": {
+    "t12":     { "default": "12:40" },
+    "delay":   { "default": "13:25", "line": "Red", "minutes": 12, "leg_event": "E4" },
+    "arrived": { "default": "15:00", "requires": "t12", "min_after_anchor_min": 5 }
+  },
+  "beats": [
+    { "anchor": "day", "at": "07:50", "do": [
+      { "op": "need.open", "need": "T-11" },
+      { "op": "msg", "channel": "ops-log", "author": "Fleet", "text": "Need T-11 opened · Acme boxes run out in ~30 h · P3" }
+    ]},
+    { "anchor": "day", "at": "07:52", "do": [
+      { "op": "need.event", "need": "T-11", "type": "visit.proposed", "by": "Field", "status": "proposed",
+        "data": { "slot": "10:30–11:30", "note": "Attach to Acme pitch (P3 policy: next visit at site)" } },
+      { "op": "msg", "channel": "ops-log", "author": "Field", "text": "T-11 slot proposed · attach to Acme pitch 10:30 (Jordan)" }
+    ]},
+    { "anchor": "day", "at": "08:05", "do": [
+      { "op": "need.event", "need": "T-11", "type": "visit.booked", "by": "Field", "status": "booked",
+        "data": { "event_id": "E2", "slot": "10:30–11:30" },
+        "set": { "assigned_staff": "s1", "booked_slot": { "event_id": "E2", "start": "10:30", "end": "11:30" } } },
+      { "op": "event.update", "id": "E2", "set": { "need_id": "T-11" }, "by": "Field", "reason": "P3 policy: attach to the next visit at that site" },
+      { "op": "msg", "channel": "ops-log", "author": "Field", "text": "T-11 booked · Jordan · 10:30 Acme (bring 2 bundles of boxes)" }
+    ]},
+    { "anchor": "day", "at": "08:45", "do": [
+      { "op": "msg", "channel": "field", "author": "Field", "text": "Morning Jordan. 6 events today: 3 pitches, 1 lunch, 1 dinner, 1 standup.\nTightest connection: lunch → Globex, leave by 1:55 PM (Green → Red, 25 min).\nFree: 9:45–9:56, 11:30–11:42, 1:30–1:55, 3:00–3:45, 5:00–6:34.\nWeather 14°C, dry, light wind.\nOpen Needs: T-11 Acme boxes low (P3), attached to your 10:30 Acme pitch. Bring 2 bundles." }
+    ]},
+    { "anchor": "day", "at": "09:12", "do": [
+      { "op": "msg", "channel": "field", "author": "Jordan", "text": "how many pitches today?" },
+      { "op": "msg", "channel": "field", "author": "Field", "text": "3 pitches: Acme 10:30, Globex 2:30, Initech 4:00." }
+    ]},
+    { "anchor": "day", "at": "09:26", "do": [
+      { "op": "msg", "channel": "field", "author": "Field", "text": "Departure check: leave by 9:56 for Acme (Back Bay). Silver → Red → Green, 24 min, no delays. Bring: boxes ×2 (T-11). Attending?" },
+      { "op": "msg", "channel": "field", "author": "Jordan", "text": "attending" }
+    ]},
+    { "anchor": "day", "at": "10:20", "do": [
+      { "op": "need.event", "need": "T-11", "type": "eta.updated", "by": "Field", "data": { "eta": "10:20" } },
+      { "op": "msg", "channel": "cell-acme", "author": "Fleet", "text": "Our engineer arrives 10:20 and is bringing boxes for the cell." },
+      { "op": "msg", "channel": "ops-log", "author": "Field", "text": "T-11 ETA 10:20" }
+    ]},
+    { "anchor": "day", "at": "10:22", "do": [
+      { "op": "need.event", "need": "T-11", "type": "visit.arrived", "by": "Jordan", "status": "on_site" },
+      { "op": "msg", "channel": "ops-log", "author": "Field", "text": "T-11 arrived · Jordan at Acme" }
+    ]},
+    { "anchor": "day", "at": "11:35", "do": [
+      { "op": "need.event", "need": "T-11", "type": "visit.completed", "by": "Fleet", "status": "closed", "data": { "result": "boxes restocked" } },
+      { "op": "consumable.set", "site": "acme", "item": "boxes", "runout": "2026-10-08T12:00", "need_id": null },
+      { "op": "msg", "channel": "cell-acme", "author": "Fleet", "text": "Boxes restocked. Run-out moved to Thursday." },
+      { "op": "msg", "channel": "ops-log", "author": "Fleet", "text": "T-11 closed · boxes restocked" }
+    ]},
+    { "anchor": "day", "at": "11:50", "do": [
+      { "op": "event.reschedule", "id": "E6", "start": "19:30", "end": "21:30", "by": "Field", "reason": "Client asked to push dinner 30 min" },
+      { "op": "msg", "channel": "field", "author": "Field", "text": "Heads up: client dinner moved to 7:30 PM at the client's request. New leave-by 7:04 PM (Red Line, 16 min). Nothing else moves." }
+    ]},
+    { "anchor": "day", "at": "12:15", "do": [
+      { "op": "warehouse.set", "site": "globex", "set": { "health": "degraded", "health_note": "open_middle_drawer failing; drawer orders held" } }
+    ]},
+
+    { "anchor": "t12", "offset_min": 0, "do": [
+      { "op": "need.open", "need": "T-12" },
+      { "op": "warehouse.set", "site": "globex", "set": { "health": "degraded", "health_note": "open_middle_drawer unproven (1/10); T-12 opened", "need_id": "T-12" } },
+      { "op": "msg", "channel": "cell-globex", "author": "Fleet", "text": "Heads up: the cell can't reliably open the middle drawer yet (1 of 10 trials). 40 drawer orders are on hold. A field engineer is being scheduled today." },
+      { "op": "msg", "channel": "ops-log", "author": "Fleet", "text": "Need T-12 opened · Globex open_middle_drawer 1/10 · P1 · on site by 5:00 PM" }
+    ]},
+    { "anchor": "t12", "offset_min": 1, "do": [
+      { "op": "need.event", "need": "T-12", "type": "visit.proposed", "by": "Field", "status": "proposed",
+        "data": { "slot": "15:00–15:45", "staff": "s1", "extra_travel_min": 0, "alternatives": 2 } },
+      { "op": "msg", "channel": "field", "author": "Field", "text": "New P1 · T-12 Globex drawer commissioning (45 min, on site by 5:00).\nYou're in Kendall for 2:30. Commissioning fits 3:00–3:45 before Initech at 4:00: +0 travel min, 5-min walk + 10 buffer after.\nBring: drawer gripper pads, calibration target.\nBook it? ✅ / ❌" },
+      { "op": "msg", "channel": "ops-log", "author": "Field", "text": "T-12 slot proposed · Jordan 3:00–3:45 · +0 travel min" }
+    ]},
+    { "anchor": "t12", "offset_min": 3, "do": [
+      { "op": "msg", "channel": "field", "author": "Jordan", "text": "✅" },
+      { "op": "booking.apply", "need": "T-12" },
+      { "op": "need.event", "need": "T-12", "type": "visit.booked", "by": "Field", "status": "booked",
+        "data": { "event_id": "V1", "slot": "15:00–15:45", "staff": "s1" } },
+      { "op": "msg", "channel": "field", "author": "Field", "text": "Booked: T-12 commissioning 3:00–3:45 at Globex. Initech leg unchanged (leave 3:45, 5-min walk)." },
+      { "op": "msg", "channel": "cell-globex", "author": "Fleet", "text": "An engineer is booked for 3:00 PM today to commission the drawer skill." },
+      { "op": "msg", "channel": "ops-log", "author": "Field", "text": "T-12 booked · Jordan · 3:00–3:45 Globex" }
+    ]},
+
+    { "anchor": "delay", "offset_min": 0, "do": [
+      { "op": "delay.detect" },
+      { "op": "msg", "when": "impact", "channel": "field", "author": "Field", "text": "Departure check, Globex 2:30: {line} Line +{minutes} min{simulated}. On the {leave_by} plan you'd arrive {eta_late} ({late_by} min late).\n1️⃣ Leave right after lunch, {leave_now}, transit → arrive {eta_now}\n2️⃣ Taxi at {leave_by} → arrive {eta_taxi}\nI'd take 1, it's cheaper and gets you there with time to spare." },
+      { "op": "msg", "when": "no_impact", "channel": "field", "author": "Field", "text": "MBTA alert: {line} Line +{minutes} min{simulated}. None of your legs use it. No change." },
+      { "op": "msg", "when": "impact", "channel": "ops-log", "author": "Field", "text": "MBTA {line} +{minutes} min{simulated} · Jordan's 2:30 leg at risk" }
+    ]},
+    { "anchor": "delay", "offset_min": 2, "do": [
+      { "op": "msg", "when": "impact", "channel": "field", "author": "Jordan", "text": "1" },
+      { "op": "delay.apply" },
+      { "op": "msg", "when": "impact", "channel": "field", "author": "Field", "text": "Done. Leave at {leave_now}, arrive Kendall {eta_now}." },
+      { "op": "need.event", "when": "impact", "requires": "t12", "need": "T-12", "type": "eta.updated", "by": "Field", "data": { "eta": "{eta_now_hhmm}", "reason": "{line} +{minutes} min, leaving early" } },
+      { "op": "msg", "when": "impact", "requires": "t12", "channel": "cell-globex", "author": "Fleet", "text": "Update: there's a transit delay, but our engineer is leaving early and will be on site by {eta_now}. Drawer commissioning is still at 3:00 PM." },
+      { "op": "msg", "when": "impact", "requires": "t12", "channel": "ops-log", "author": "Field", "text": "T-12 ETA updated · on site {eta_now} ({line} +{minutes})" }
+    ]},
+
+    { "anchor": "arrived", "offset_min": 0, "do": [
+      { "op": "msg", "channel": "field", "author": "Jordan", "text": "Arrived 📍" },
+      { "op": "need.event", "need": "T-12", "type": "visit.arrived", "by": "Jordan", "status": "on_site" },
+      { "op": "warehouse.set", "site": "globex", "set": { "health": "commissioning", "health_note": "Engineer on site; candidate policies on trial" } },
+      { "op": "msg", "channel": "ops-log", "author": "Field", "text": "T-12 arrived · Jordan at Globex · commissioning starts" }
+    ]},
+    { "anchor": "arrived", "offset_min": 2, "do": [
+      { "op": "need.event", "need": "T-12", "type": "commissioning.started", "by": "Fleet", "status": "commissioning", "data": { "policies": ["drawer-ft-v2", "drawer-base+pads"] } },
+      { "op": "msg", "channel": "cell-globex", "author": "Fleet", "text": "Commissioning started: 2 candidate drawer policies on trial. The skill unlocks only at ≥95% confidence of ≥80% success." }
+    ]},
+    { "anchor": "drop", "offset_min": 0, "do": [
+      { "op": "msg", "channel": "ops-log", "author": "Fleet", "text": "T-12 commissioning · policy drawer-base+pads dropped ({drop_succ}/{drop_trials})" }
+    ]},
+    { "anchor": "gate", "offset_min": 0, "do": [
+      { "op": "msg", "channel": "cell-globex", "author": "Fleet", "text": "Drawer skill unlocked. 95% confident the success rate is at least 80% ({gate_succ}/{gate_trials} trials, drawer-ft-v2). Drawer orders are going out again." },
+      { "op": "msg", "channel": "ops-log", "author": "Fleet", "text": "T-12 gate OPEN · drawer-ft-v2 {gate_succ}/{gate_trials} · P={gate_conf}" },
+      { "op": "warehouse.set", "site": "globex", "set": { "health": "ok", "health_note": "open_middle_drawer commissioned" } }
+    ]},
+    { "anchor": "gate", "offset_min": 3, "do": [
+      { "op": "need.event", "need": "T-12", "type": "visit.completed", "by": "Fleet", "status": "closed", "data": { "result": "gate open", "policy": "drawer-ft-v2" } },
+      { "op": "consumable.set", "site": "globex", "item": "gripper pads", "runout": "2026-10-12T10:00", "need_id": null },
+      { "op": "msg", "channel": "field", "author": "Field", "text": "T-12 closed by Fleet (gate open). Next: Initech at 4:00, leave 3:45, 5-min walk." },
+      { "op": "msg", "channel": "ops-log", "author": "Fleet", "text": "T-12 closed" }
+    ]},
+    { "anchor": "gate", "offset_min": 6, "do": [
+      { "op": "need.event", "need": "T-12", "type": "order.shipped", "by": "Fleet", "data": { "order": "G-4471", "note": "first held drawer order" } },
+      { "op": "msg", "channel": "cell-globex", "author": "Fleet", "text": "Order G-4471 shipped. The rest of the held drawer orders are going out now." },
+      { "op": "msg", "channel": "ops-log", "author": "Fleet", "text": "Order G-4471 shipped · Globex drawer backlog draining" }
+    ]},
+    { "anchor": "day", "at": "18:00", "do": [
+      { "op": "msg", "channel": "field", "author": "Field", "text": "Day recap: 3 pitches done, 2 Needs closed (T-11 boxes at Acme, T-12 drawer commissioning at Globex). One Red Line delay absorbed by leaving early. Fleet: drawer skill unlocked at Globex, order G-4471 shipped, backlog cleared. Dinner downtown moved to 7:30, leave by 7:04." }
+    ]}
+  ]
+}

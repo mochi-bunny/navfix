@@ -1,0 +1,40 @@
+{
+  "_comment": "Field calendar seed for the demo day. Times are wall-clock America/New_York on demo.date. Mirrors Field's SQLite tables (staff, events, legs, prefs).",
+  "date": "2026-10-03",
+  "start_time": "08:30",
+  "prefs": { "buffer_min": 10, "walk_limit_min": 15, "brief_time": "08:45", "tz": "America/New_York" },
+  "places": {
+    "office":   { "name": "Office · Seaport",            "area": "Seaport",        "coords": [42.3510, -71.0450] },
+    "acme":     { "name": "Acme · Back Bay",             "area": "Back Bay",       "coords": [42.3503, -71.0810] },
+    "northwind":{ "name": "Northwind lunch · Back Bay",  "area": "Back Bay",       "coords": [42.3480, -71.0790] },
+    "globex":   { "name": "Globex · Kendall Square",     "area": "Kendall Square", "coords": [42.3629, -71.0901] },
+    "initech":  { "name": "Initech · Kendall Square",    "area": "Kendall Square", "coords": [42.3655, -71.0860] },
+    "dinner":   { "name": "Client dinner · Downtown",    "area": "Downtown",       "coords": [42.3555, -71.0600] }
+  },
+  "staff": [
+    { "id": "s1", "name": "Jordan Reyes", "role": "Field engineer · sales", "skills": ["sales", "commissioning", "drawer", "gripper"], "home_base": "office", "current_location": "office", "spotlight": true },
+    { "id": "s2", "name": "Sam Okafor",   "role": "Field engineer",         "skills": ["commissioning", "install"],                  "home_base": "office", "current_location": "office", "spotlight": false }
+  ],
+  "events": [
+    { "id": "E1", "staff_id": "s1", "title": "Team standup",          "type": "standup", "start": "09:00", "end": "09:45", "place": "office" },
+    { "id": "E2", "staff_id": "s1", "title": "Sales pitch · Acme",    "type": "pitch",   "start": "10:30", "end": "11:30", "place": "acme",      "site": "acme" },
+    { "id": "E3", "staff_id": "s1", "title": "Client lunch · Northwind", "type": "lunch", "start": "12:00", "end": "13:30", "place": "northwind" },
+    { "id": "E4", "staff_id": "s1", "title": "Sales pitch · Globex",  "type": "pitch",   "start": "14:30", "end": "15:00", "place": "globex",    "site": "globex" },
+    { "id": "E5", "staff_id": "s1", "title": "Sales pitch · Initech", "type": "pitch",   "start": "16:00", "end": "17:00", "place": "initech" },
+    { "id": "E6", "staff_id": "s1", "title": "Client dinner",         "type": "dinner",  "start": "19:00", "end": "21:00", "place": "dinner" },
+
+    { "id": "S1", "staff_id": "s2", "title": "Team standup",                  "type": "standup",     "start": "09:00", "end": "09:45", "place": "office" },
+    { "id": "S2", "staff_id": "s2", "title": "Preventive maintenance · Acme", "type": "maintenance", "start": "11:00", "end": "13:00", "place": "acme", "site": "acme" },
+    { "id": "S3", "staff_id": "s2", "title": "Bench · spare grippers",        "type": "office",      "start": "14:00", "end": "17:00", "place": "office" }
+  ],
+  "legs": [
+    { "event_id": "E2", "mode": "transit", "route": "Silver Line → Red → Green", "lines": ["Silver", "Red", "Green"], "minutes": 24, "leave_by": "09:56" },
+    { "event_id": "E3", "mode": "walk",    "route": "Walk",                      "lines": [],                         "minutes": 8,  "leave_by": "11:42" },
+    { "event_id": "E4", "mode": "transit", "route": "Green → Red Line",          "lines": ["Green", "Red"],           "minutes": 25, "leave_by": "13:55", "taxi_minutes": 23 },
+    { "event_id": "E5", "mode": "walk",    "route": "Walk",                      "lines": [],                         "minutes": 5,  "leave_by": "15:45" },
+    { "event_id": "E6", "mode": "transit", "route": "Red Line",                  "lines": ["Red"],                    "minutes": 16, "leave_by": "18:34" },
+
+    { "event_id": "S2", "mode": "transit", "route": "Silver Line → Red → Green", "lines": ["Silver", "Red", "Green"], "minutes": 24, "leave_by": "10:26" },
+    { "event_id": "S3", "mode": "transit", "route": "Green → Red → Silver Line", "lines": ["Green", "Red", "Silver"], "minutes": 24, "leave_by": "13:26" }
+  ]
+}
