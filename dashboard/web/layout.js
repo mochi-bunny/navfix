@@ -6,12 +6,17 @@
 //   rail     show in the left icon rail; railSep draws a divider before it; railBottom pins it to the bottom
 //   badge    'changes' | 'fleet' → unseen count on the rail icon
 //   key      keyboard shortcut while recording
+//   columns  panels arranged in columns (top to bottom) that can be minimized; the rest grow into the space.
+//            `widths` are the columns' relative widths, `grow` the panels' relative heights within a column.
 // Each view's `more` link (top right of its panel) is its deep dive.
 
 export const ROUTES = [
   // Surveillance first
-  { path: '/',              title: 'Command center', icon: 'grid',     views: ['feed', 'fleetstatus', 'schedside', 'robots', 'gates', 'opslog'], layout: 'command', rail: true, key: '1' },
-  { path: '/live',          title: 'Live feeds',    icon: 'camera',   views: ['feed', 'robots'], layout: 'live', rail: true, key: 'l' },
+  { path: '/',              title: 'Command center', icon: 'grid',     views: ['feed', 'robots', 'fleetstatus', 'gates', 'schedside', 'opslog'], layout: 'command', rail: true, key: '1',
+    columns: [['feed', 'robots'], ['fleetstatus', 'gates'], ['schedside', 'opslog']], widths: [1.75, 1, 0.92],
+    grow: { feed: 1.35, robots: 1, fleetstatus: 1.3, gates: 1, schedside: 1.3, opslog: 1 } },
+  { path: '/live',          title: 'Live feeds',    icon: 'camera',   views: ['feed', 'robots'], layout: 'live', rail: true, key: 'l',
+    columns: [['feed'], ['robots']], widths: [3, 1] },
   { path: '/fleet',         title: 'Fleet watch',   icon: 'radar',    views: ['incorporated', 'warehouse', 'commissioning', 'reliability'], layout: 'fleet', rail: true, key: 'f' },
   { path: '/fleet-updates', title: 'Fleet updates', icon: 'robot',    views: ['fleetupdates'],  layout: 'single', rail: true, badge: 'fleet', key: 'u' },
   { path: '/needs',         title: 'Needs',         icon: 'ticket',   views: ['needs'],         layout: 'single', rail: true, key: '3' },
@@ -23,7 +28,8 @@ export const ROUTES = [
   { path: '/changes',       title: 'Changes',       icon: 'history',  views: ['changes'],       layout: 'single', rail: true, badge: 'changes', key: 'h' },
 
   // Ops & proof
-  { path: '/ops',           title: 'Ops',           icon: 'chat',     views: ['opslog', 'discord'], layout: 'ops', rail: true, railSep: true, key: '9' },
+  { path: '/ops',           title: 'Ops',           icon: 'chat',     views: ['opslog', 'discord'], layout: 'ops', rail: true, railSep: true, key: '9',
+    columns: [['opslog'], ['discord']], widths: [1, 2.2] },
   { path: '/proof',         title: 'Proof',         icon: 'shield',   views: ['proof'],         layout: 'single', rail: true, key: 'p' },
   { path: '/settings',      title: 'Settings',      icon: 'gear',     views: ['settings'],      layout: 'single', railBottom: true, key: 's' },
 

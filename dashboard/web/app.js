@@ -3,7 +3,7 @@ import { VIEWS } from './views/index.js';
 import * as F from './format.js';
 import { icon, logo } from './icons.js';
 import {
-  store, actions, applySettings, currentUser, setUser, avatar, unseenChanges, unseenFleet, closeDrawer,
+  store, actions, applySettings, currentUser, LS, setUser, avatar, unseenChanges, unseenFleet, closeDrawer,
 } from './state.js';
 import { openEvent } from './drawers.js';
 import { startFeedLoop, stepFeed } from './feeds.js';
@@ -57,26 +57,85 @@ function mount() {
   const { route, params } = match(location.pathname);
   document.title = `${route.title} · Fleet & Field`;
   const main = $('#main');
-  main.className = `layout layout-${route.layout}`;
+  main.className = `layout layout-${route.layout}${route.columns ? ' has-cols' : ''}`;
   $('.app').classList.toggle('is-simple', route.chrome === false);
   store.ui.menuOpen = false;
   main.innerHTML = '';
   const panels = new Map();
+
+  // Column layouts: each column is a flex stack, so minimized panels give their space to the rest.
+  let colOf = null;
+  if (route.columns) {
+    const cols = document.createElement('div');
+    cols.className = 'cols';
+    colOf = {};
+    route.columns.forEach((ids, i) => {
+      const col = document.createElement('div');
+      col.className = 'col';
+      col.style.setProperty('--w', route.widths?.[i] ?? 1);
+      cols.appendChild(col);
+      ids.forEach((id) => { colOf[id] = col; });
+    });
+    main.appendChild(cols);
+  }
+
   for (const id of route.views) {
     const v = VIEWS[id];
     const sec = document.createElement('section');
     sec.className = `panel panel-${id}${route.bare ? ' is-bare' : ''}`;
     sec.dataset.view = id;
+    if (route.grow?.[id]) sec.style.setProperty('--g', route.grow[id]);
+    const tools = route.columns ? `<div class="panel-tools">
+        <button class="tool tool-focus" data-action="panel-focus" data-view="${id}" title="Focus: minimize the others">${icon('expand')}${icon('shrink')}</button>
+        <button class="tool tool-min" data-action="panel-min" data-view="${id}" title="Minimize / restore">${icon('minus')}${icon('plus')}</button></div>` : '';
     sec.innerHTML = route.bare ? '<div class="panel-body"></div>'
-      : `<header class="panel-head"><h2 class="panel-title">${F.esc(v.title)}</h2><div class="panel-meta"></div>${v.more && v.more !== route.path
-        ? `<a class="panel-more" href="${v.more}" data-nav title="Open the full view">Open ${icon('chevron')}</a>` : ''}</header><div class="panel-body"></div>`;
-    main.appendChild(sec);
+      : `<header class="panel-head"><h2 class="panel-title"${route.columns ? ` data-action="panel-restore" data-view="${id}"` : ''}>${F.esc(v.title)}</h2><div class="panel-meta"></div>${v.more && v.more !== route.path
+        ? `<a class="panel-more" href="${v.more}" data-nav title="Open the full view">Open ${icon('chevron')}</a>` : ''}${tools}</header><div class="panel-body"></div>`;
+    (colOf?.[id] || main).appendChild(sec);
     panels.set(id, { el: sec, seen: null });
     v.init?.(sec);
   }
   current = { route, params, panels };
+  applyMinimized();
   render();
 }
+
+// ---- minimize / focus (per page, remembered in this browser) ---------------------------
+const minKey = () => `ff.min.${current.route.path}`;
+const getMin = () => new Set(LS.get(minKey(), []).filter((id) => current.route.views.includes(id)));
+function setMin(set) { LS.set(minKey(), [...set]); applyMinimized(); }
+
+function applyMinimized() {
+  if (!current?.route.columns) return;
+  const min = getMin();
+  const open = current.route.views.filter((id) => !min.has(id));
+  for (const [id, p] of current.panels) {
+    p.el.classList.toggle('is-min', min.has(id));
+    p.el.classList.toggle('is-focused', open.length === 1 && open[0] === id && current.route.views.length > 1);
+  }
+  for (const col of $('#main').querySelectorAll('.col')) {
+    const secs = [...col.children];
+    col.classList.toggle('is-collapsed', secs.length > 0 && secs.every((s) => s.classList.contains('is-min')));
+  }
+}
+
+Object.assign(actions, {
+  'panel-min': (el) => {
+    const min = getMin();
+    if (min.has(el.dataset.view)) min.delete(el.dataset.view); else min.add(el.dataset.view);
+    setMin(min);
+  },
+  'panel-restore': (el) => {
+    const min = getMin();
+    if (min.delete(el.dataset.view)) setMin(min);
+  },
+  'panel-focus': (el) => {
+    const id = el.dataset.view;
+    const others = current.route.views.filter((v) => v !== id);
+    const focused = others.every((v) => getMin().has(v)) && !getMin().has(id);
+    setMin(focused ? new Set() : new Set(others));
+  },
+});
 
 // ---- rendering ---------------------------------------------------------------
 // A view returns an HTML string or a list of [partKey, html]. Each part is only

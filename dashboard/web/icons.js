@@ -26,7 +26,10 @@ const P = {
   camera: 'M3 8h4l2-3h6l2 3h4v11H3z M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
   prev: 'M15 6l-6 6 6 6',
   next: 'M9 6l6 6-6 6',
-  expand: 'M4 9V4h5 M20 9V4h-5 M4 15v5h5 M20 15v5h-5',
+  minus: 'M5 12h14',
+  plus: 'M12 5v14 M5 12h14',
+  shrink: 'M9 4v5H4 M15 4v5h5 M9 20v-5H4 M15 20v-5h5',
+  expand:'M4 9V4h5 M20 9V4h-5 M4 15v5h5 M20 15v5h-5',
   box:'M3 7l9-4 9 4v10l-9 4-9-4z M3 7l9 4 9-4 M12 11v10',
 };
 

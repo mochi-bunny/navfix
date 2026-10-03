@@ -186,6 +186,7 @@ button { font: inherit; color: inherit; }
 .layout-command .panel-gates { grid-area: gates; }
 .layout-command .panel-opslog { grid-area: ops; }
 .layout-command .panel, .layout-live .panel { min-height: 0; overflow: hidden; }
+.layout-ops.has-cols { padding-bottom: 18px; }
 .layout-command .panel-body, .layout-live .panel-body { flex: 1; min-height: 0; overflow-y: auto; }
 .layout-command .panel-opslog .panel-body { overflow: hidden; }
 .layout-command .panel-opslog .part { height: 100%; }
@@ -195,12 +196,52 @@ button { font: inherit; color: inherit; }
 .layout-live { grid-template-columns: minmax(0, 3fr) minmax(320px, 1fr); }
 .layout-live .rb-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-.panel-head { flex-wrap: nowrap; }
+.panel-head { flex-wrap: nowrap; gap: 10px; }
+.panel-title { white-space: nowrap; }
 .panel-meta { margin-left: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .panel-more { display: inline-flex; align-items: center; gap: 2px; padding: 4px 6px 4px 10px; border-radius: 8px; background: var(--surface-2); color: var(--text-2); font-size: var(--fs-xs); white-space: nowrap; text-decoration: none !important; }
 .panel-more:hover { color: var(--text); background: var(--surface-3); }
 .panel-more .icon { width: 14px; height: 14px; }
 .sub.first { margin-top: 0; }
+
+/* ---- collapsible column layouts (command center, live, ops) ------------------------- */
+.layout.has-cols { display: block; height: 100%; overflow: hidden; }
+.cols { display: flex; gap: var(--gap); height: 100%; min-height: 0; }
+.col { flex: var(--w, 1) 1 0; display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; transition: flex-grow .3s ease; }
+.col > .panel { flex: var(--g, 1) 1 0; min-height: 0; overflow: hidden; transition: flex-grow .3s ease; }
+.col > .panel > .panel-body { flex: 1; min-height: 0; overflow-y: auto; }
+.layout-ops .messages { height: auto; flex: 1; min-height: 0; }
+.layout-ops .channel { min-height: 0; }
+.layout-ops .panel-discord .panel-body, .layout-ops .panel-discord .part { display: flex; flex-direction: column; min-height: 0; }
+.layout-ops .panel-discord .part { flex: 1; }
+.layout-ops .discord { flex: 1; min-height: 0; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.layout-ops .panel-opslog .panel-body { overflow: hidden; }
+.layout-ops .panel-opslog .part { height: 100%; }
+.layout-ops .opslog { height: 100%; max-height: 100%; }
+
+.panel-tools { display: flex; gap: 4px; flex: none; }
+.tool { width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 8px; background: var(--surface-2); color: var(--text-muted); cursor: pointer; }
+.tool:hover { background: var(--surface-3); color: var(--text); }
+.tool .icon { width: 15px; height: 15px; }
+.tool-min .icon:last-child, .tool-focus .icon:last-child { display: none; }
+.panel.is-min .tool-min .icon:first-child, .panel.is-focused .tool-focus .icon:first-child { display: none; }
+.panel.is-min .tool-min .icon:last-child, .panel.is-focused .tool-focus .icon:last-child { display: block; }
+.panel.is-focused .tool-focus { background: var(--accent); color: var(--accent-ink); }
+
+/* minimized: header only (title + key numbers stay visible); the others take the space */
+.col > .panel.is-min { flex: 0 0 auto; }
+.panel.is-min > .panel-body { display: none; }
+.panel.is-min > .panel-head { padding-bottom: 12px; }
+.panel.is-min .panel-title { cursor: pointer; }
+.panel.is-min .panel-title:hover { color: var(--text); }
+
+/* a column whose panels are all minimized folds into a slim strip */
+.col.is-collapsed { flex: 0 0 58px; }
+.col.is-collapsed > .panel.is-min { flex: 1 1 0; }
+.col.is-collapsed .panel-head { flex-direction: column; align-items: center; justify-content: flex-start; gap: 10px; height: 100%; padding: 12px 0; }
+.col.is-collapsed .panel-title { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; order: 2; }
+.col.is-collapsed .panel-meta, .col.is-collapsed .panel-more, .col.is-collapsed .tool-focus { display: none; }
+.col.is-collapsed .panel-tools { order: 1; }
 
 /* live feed */
 .panel-feed > .panel-body { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 10px; overflow: hidden !important; }

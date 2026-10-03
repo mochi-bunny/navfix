@@ -40,7 +40,10 @@ Live endpoints, paths and field names are in **[INTERFACES.md](INTERFACES.md)**,
 - **Scheduler** on the side: the viewer's day in compact form, with *Scheduler only*, *Add change*, and *My day*.
 - **Ops log**: cross-agent handoffs.
 
-Every panel's **Open ›** link goes to its deep dive. The left rail is grouped as surveillance, then scheduler,
+Every panel's **Open ›** link goes to its deep dive. Panels on the command center, `/live`, and `/ops` can be
+**minimized** (−) down to their header, which keeps the key numbers, and the remaining panels grow to fill
+the space. A column whose panels are all minimized folds into a slim strip. **Focus** (⤢) minimizes
+everything else; press it again to restore. The layout is remembered per page in this browser. The left rail is grouped as surveillance, then scheduler,
 then ops & proof, followed by the staff avatars (click one to view as that person) and Settings.
 
 | Key | URL | View |
