@@ -1,0 +1,37 @@
+{
+  "mode": "live",
+  "sources": { "tickets": "live", "calendar": "live", "cell": "live", "clock": "live",
+               "messages": "live", "system": "live", "feeds": "live" },
+  "host": "0.0.0.0",
+  "port": 8095,
+  "poll_ms": 1000,
+  "demo": {
+    "date": "2026-10-03", "start_time": "08:30", "tz": "America/New_York", "tz_offset": "-04:00",
+    "spotlight_staff": "s1", "channels": ["ops-log"]
+  },
+  "live": {
+    "tickets":  { "base_url": "http://127.0.0.1:7100" },
+    "calendar": { "sqlite_path": "../field/field.db" },
+    "cell":     { "base_url": "http://127.0.0.1:7100", "clips_root": "/home/dell/hack/src/app/data/clips" },
+    "clock":    { "base_url": "http://127.0.0.1:7100" },
+    "field":    { "base_url": "http://127.0.0.1:7100" },
+    "messages": { "jsonl_path": null, "url": "http://127.0.0.1:7100/messages" },
+    "feeds":    { "url": "http://127.0.0.1:7100/feeds", "list": [] },
+    "system": {
+      "vllm_url": "http://127.0.0.1:8000",
+      "expected_model": "nvidia/Qwen3.6-35B-A3B-NVFP4",
+      "gpu_total_gb": 128,
+      "services": [
+        { "name": "vLLM (Qwen3.6-35B-A3B)",   "host": "127.0.0.1", "port": 8000, "http": "/v1/models" },
+        { "name": "Supervisor tool service", "host": "127.0.0.1", "port": 8090, "http": "/health" },
+        { "name": "Sim bridge",              "host": "127.0.0.1", "port": 3001, "http": "/health" },
+        { "name": "FleetOps glue",           "host": "127.0.0.1", "port": 7100, "http": "/health" },
+        { "name": "Supervisor agent (OpenClaw)", "host": "127.0.0.1", "port": 18789 },
+        { "name": "GR00T server A",          "host": "127.0.0.1", "port": 5555 },
+        { "name": "GR00T server B",          "host": "127.0.0.1", "port": 5556 },
+        { "name": "navbot (Discord)",        "host": "127.0.0.1", "port": 8787, "http": "/health" }
+      ],
+      "egress_counter_url": null, "egress_counter_file": null
+    }
+  }
+}

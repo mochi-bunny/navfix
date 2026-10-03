@@ -1,0 +1,7 @@
+__pycache__/
+*.log
+data/clips/
+data/*.token
+data/tickets.json
+data/trust.json
+data/test-run-*/

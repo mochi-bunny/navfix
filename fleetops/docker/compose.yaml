@@ -1,0 +1,105 @@
+# FleetOps on the GB10:  docker compose -f ~/fleetops/docker/compose.yaml up -d --build
+#
+# Host networking keeps every port and address exactly as the non-container setup: the NemoClaw agent
+# sandbox reaches the supervisor at 172.18.0.1:8090, and the supervisor wakes the agent at 127.0.0.1:18789.
+# Not in this file (already containers, managed separately):
+#   vllm-qwen   the model server (docker)          -> port 8000
+#   cell        GR00T policy servers (docker)      -> ports 5555 / 5556
+#   navfix      the supervisor LLM agent, OpenClaw in a NemoClaw / OpenShell sandbox
+# Secrets (never in the image): ../secrets/fleetops.env and /home/dell/navfix/navbot/.env
+name: fleetops
+
+x-service: &service
+  image: fleetops:latest
+  network_mode: host
+  restart: unless-stopped
+  env_file: [../secrets/fleetops.env]
+  volumes:
+    - /etc/localtime:/etc/localtime:ro          # same local time as the host: ticket times stay consistent
+  logging: {driver: json-file, options: {max-size: "20m", max-file: "3"}}
+
+x-check: &check
+  interval: 5s
+  timeout: 3s
+  retries: 6
+  start_period: 10s
+
+services:
+  bridge:
+    <<: *service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      additional_contexts:
+        fleetops: ..
+        supervisor: /home/dell/hack/src/app
+        navfix: /home/dell/navfix
+    working_dir: /app/fleetops/sim
+    command: ["python3", "sim_bridge.py"]
+    healthcheck:
+      <<: *check
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3001/health', timeout=2)"]
+
+  sim:
+    <<: *service
+    working_dir: /app/fleetops/sim
+    command: ["python3", "fleet_runner.py", "--bridge", "http://127.0.0.1:3001", "--seed", "${FLEET_SEED:-7}"]
+    depends_on: {bridge: {condition: service_healthy}}
+    healthcheck:
+      <<: *check
+      test: ["CMD", "python3", "-c", "import json, sys, urllib.request; d = json.load(urllib.request.urlopen('http://127.0.0.1:3001/health', timeout=2)); sys.exit(0 if d['ok'] and d['stale_s'] < 3 and d['source'] == 'fleet_runner' else 1)"]
+
+  supervisor:
+    <<: *service
+    working_dir: /app/supervisor
+    command: ["python3", "tools_service.py"]
+    environment:
+      SUPERVISOR_WEBHOOK_URL: http://127.0.0.1:18789/hooks/agent
+      SUPERVISOR_THINKING: ${SUPERVISOR_THINKING:-off}
+      SCHEDULER_WEBHOOK_URL: http://127.0.0.1:7100/hooks/scheduler
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/dell/hack/src/app/data:/app/supervisor/data          # tickets, trust, clips, hooks token
+      - /var/run/docker.sock:/var/run/docker.sock                  # commissioning runs GR00T trials via docker exec cell
+      - /usr/bin/docker:/usr/local/bin/docker:ro
+    depends_on: {bridge: {condition: service_healthy}}
+    healthcheck:
+      <<: *check
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health', timeout=2)"]
+
+  glue:
+    <<: *service
+    working_dir: /app/fleetops/glue
+    command: ["python3", "fleetops_glue.py"]
+    environment:
+      NAVBOT_URL: http://127.0.0.1:8787
+      ISAAC_STREAM_URL: ${ISAAC_STREAM_URL:-}
+    depends_on: {supervisor: {condition: service_healthy}}
+    healthcheck:
+      <<: *check
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7100/health', timeout=2)"]
+
+  dashboard:
+    <<: *service
+    working_dir: /app/navfix/dashboard
+    command: ["python3", "run.py", "--config", "config.docker.json", "--mode", "live"]
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/dell/hack/src/app/data/clips:/app/supervisor/data/clips:ro    # GR00T trial clips for Need pages
+      - /home/dell/navfix/navbot/data:/app/navfix/navbot/data:ro            # for Megha's optional "navbot" source mode
+    depends_on: {glue: {condition: service_healthy}}
+    healthcheck:
+      <<: *check
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8095/api/config', timeout=2)"]
+
+  navbot:
+    <<: *service
+    working_dir: /app/navfix/navbot
+    command: ["python3", "bot.py"]
+    env_file: [/home/dell/navfix/navbot/.env]                  # Discord token, channel ids, shared key
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/dell/navfix/navbot/data:/app/navfix/navbot/data   # bot.db (approvals, fleet logs, activity)
+    healthcheck:
+      <<: *check
+      test: ["CMD", "python3", "-c", "import json, sys, urllib.request; sys.exit(0 if json.load(urllib.request.urlopen('http://127.0.0.1:8787/health', timeout=2)).get('discord_ready') else 1)"]

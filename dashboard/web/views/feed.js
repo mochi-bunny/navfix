@@ -50,7 +50,7 @@ export default {
       <div class="seg seg-sm">${['all', ...sites].map((k) => `<button data-action="feed-site" data-site="${F.esc(k)}" class="${site === k ? 'is-on' : ''}">${k === 'all' ? 'All' : F.esc(s.warehouse.find((w) => w.site === k)?.name || k)}</button>`).join('')}</div>
       <button class="icon-btn sm" data-action="feed-step" data-dir="-1" title="Previous ( [ )">${icon('prev')}</button>
       <div class="feed-chips">${list.map((x) => `<button class="feed-chip st-${F.esc(x.robot?.status || 'cam')}${x.id === f.id ? ' is-on' : ''}" data-action="watch" data-feed="${F.esc(x.id)}" title="${F.esc(x.label)}">
-        ${x.robot_id ? '<span class="dot-st"></span>' : icon('camera')}${F.esc(x.robot_id ? x.robot_id : 'Overview')}</button>`).join('')}</div>
+        ${x.robot_id ? '<span class="dot-st"></span>' : icon('camera')}${F.esc(x.robot_id ? x.robot_id : ((x.label || 'Overview').replace(/^Isaac · /, '')))}</button>`).join('')}</div>
       <button class="icon-btn sm" data-action="feed-step" data-dir="1" title="Next ( ] )">${icon('next')}</button>
     </div>`;
     return [['stage', player(f)], ['overlay', overlay(s, f, ctx)], ['switch', switcher]];

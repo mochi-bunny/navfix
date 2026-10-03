@@ -1,0 +1,24 @@
+preset:
+  name: warehouse-tools
+  description: "Warehouse supervisor tool service on the host (port 8090); no access to the presenter's /demo controls"
+
+network_policies:
+  warehouse_tools:
+    name: warehouse_tools
+    endpoints:
+      - host: host.openshell.internal
+        port: 8090
+        protocol: rest
+        enforcement: enforce
+        allowed_ips:
+          # host.openshell.internal resolves to the openshell-docker bridge gateway (172.18.0.1)
+          - 172.16.0.0/12
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/tickets" }
+          - allow: { method: POST, path: "/commission" }
+          - allow: { method: PATCH, path: "/tickets/**" }
+    binaries:
+      - { path: /usr/bin/curl }
+      - { path: /usr/local/bin/node }
+      - { path: /usr/bin/python3 }

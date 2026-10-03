@@ -1,0 +1,8 @@
+logs/
+run/
+secrets/
+media/
+__pycache__/
+*.pyc
+old/
+config-backups/
