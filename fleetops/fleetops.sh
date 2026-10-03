@@ -131,7 +131,7 @@ case "${1:-status}" in
            "${COMPOSE[@]}" stop sim
            tmux kill-session -t fo-isaac 2>/dev/null
            echo "=== $(date '+%F %T') isaac start ===" >> "$LOGS/isaac.log"
-           tmux new -d -s fo-isaac "bash -c 'export DISPLAY=${ISAAC_DISPLAY:-:1} XAUTHORITY=/run/user/$(id -u)/gdm/Xauthority OMNI_KIT_ACCEPT_EULA=YES; exec $HOME/isaacsim-env/bin/python $FO/isaac/warehouse_live.py --bridge http://127.0.0.1:3001 --cams --seed ${FLEET_SEED:-7} >> $LOGS/isaac.log 2>&1'"
+           tmux new -d -s fo-isaac "bash -c 'export DISPLAY=${ISAAC_DISPLAY:-:1} XAUTHORITY=/run/user/$(id -u)/gdm/Xauthority OMNI_KIT_ACCEPT_EULA=YES LD_PRELOAD=/lib/aarch64-linux-gnu/libgomp.so.1; exec $HOME/isaacsim-env/bin/python $FO/isaac/warehouse_live.py --bridge http://127.0.0.1:3001 --cams --seed ${FLEET_SEED:-7} >> $LOGS/isaac.log 2>&1'"
            echo "  isaac       starting on display ${ISAAC_DISPLAY:-:1} (first launch compiles shaders: a few minutes)"
            for i in $(seq 1 120); do curl -s --max-time 2 http://127.0.0.1:3001/health | grep -q '"source": "isaac"' && { echo "  isaac       live: pushing to the bridge"; exit 0; }; sleep 5; done
            echo "  isaac       not pushing after 10 min; last log lines:"; tail -5 "$LOGS/isaac.log" ;;
