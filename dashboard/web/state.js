@@ -3,7 +3,7 @@
 // Per-viewer preferences live in localStorage; plan data always comes from the server.
 import * as F from './format.js';
 
-const LS = {
+export const LS = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* private window etc. */ } },
 };
@@ -17,7 +17,7 @@ export const store = {
 
 // ---- settings ----------------------------------------------------------------
 export const DEFAULT_SETTINGS = {
-  theme: 'dark', accent: '#8b7cf6', density: 'comfortable', clock24: false, highlight: true, planMode: 'plan', home: 'simple',
+  theme: 'dark', accent: '#8b7cf6', density: 'comfortable', clock24: false, highlight: true, planMode: 'plan',
 };
 export const ACCENTS = ['#8b7cf6', '#3d9bf0', '#ec5f9c', '#2fbf8f', '#f5a524'];
 

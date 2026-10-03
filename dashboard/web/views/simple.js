@@ -1,8 +1,8 @@
-// The main page: just the plan. One menu (switch to the full view, or switch person)
-// and one button to add a change to the schedule.
+// Scheduler only: just the plan. One menu (back to the dashboard, the full day
+// view, or another person) and one button to add a change to the schedule.
 import * as F from '../format.js';
 import { icon } from '../icons.js';
-import { store, on, saveSettings, setUser, userChanges, unseenChanges, avatar } from '../state.js';
+import { store, on, setUser, userChanges, unseenChanges, avatar } from '../state.js';
 import { planList } from './myday.js';
 import { openAddChange } from '../drawers.js';
 
@@ -10,7 +10,7 @@ const DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', '
 const MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 on('menu-toggle', () => { store.ui.menuOpen = !store.ui.menuOpen; store.rerender(); });
-on('go-full', () => { saveSettings({ home: 'full' }); store.navigate('/day'); });
+on('go-to', (el) => { store.ui.menuOpen = false; store.navigate(el.dataset.path); });
 on('menu-user', (el) => { store.ui.menuOpen = false; setUser(el.dataset.id); });
 on('add-change', () => { store.ui.menuOpen = false; openAddChange(); });
 
@@ -26,7 +26,8 @@ export default {
     const menu = `<div class="menu">
         <button class="icon-btn" data-action="menu-toggle" title="Menu" aria-expanded="${!!store.ui.menuOpen}">${icon('list')}</button>
         <div class="menu-pop"${store.ui.menuOpen ? '' : ' hidden'}>
-          <button class="menu-item" data-action="go-full">${icon('grid')}<span><strong>Full view</strong><br><span class="muted small">Calendar, Fleet, changes and more</span></span></button>
+          <button class="menu-item" data-action="go-to" data-path="/">${icon('grid')}<span><strong>Dashboard</strong><br><span class="muted small">Fleet, live feeds and everything else</span></span></button>
+          <button class="menu-item" data-action="go-to" data-path="/day">${icon('calendar')}<span><strong>Full day view</strong><br><span class="muted small">Plan with timeline, Fleet signals, updates</span></span></button>
           <div class="menu-sep"></div>
           <div class="menu-label">Viewing as</div>
           ${s.staff.map((st) => `<button class="menu-item${st.id === user.id ? ' is-on' : ''}" data-action="menu-user" data-id="${F.esc(st.id)}">${avatar(st, 'sm')} ${F.esc(st.name)}${st.id === user.id ? ` <span class="menu-check">${icon('check')}</span>` : ''}</button>`).join('')}

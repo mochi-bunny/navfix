@@ -1,6 +1,6 @@
 import * as F from '../format.js';
 
-function spark(series) {
+export function spark(series) {
   if (!series?.length) return '';
   const W = 320, H = 64, P = 4;
   const vs = series.map((p) => p.v);
@@ -32,9 +32,9 @@ export default {
         </dl>
         <div class="spark-wrap">${spark(w.throughput?.series)}</div>
         ${w.robots?.length ? `<h4 class="sub2">Robots</h4><div class="robots">${w.robots.map((r) => `
-          <div class="robot r-${F.esc(r.status)}" data-key="rb-${F.esc(r.id)}-${F.esc(r.status)}" title="${F.esc(`${r.id} · ${r.zone} · ${r.task} · battery ${r.battery}% · ${r.status}`)}">
+          <button class="robot r-${F.esc(r.status)}" data-action="watch" data-robot="${F.esc(r.id)}" data-key="rb-${F.esc(r.id)}-${F.esc(r.status)}" title="${F.esc(`Watch ${r.id} · ${r.zone} · ${r.task} · battery ${r.battery}% · ${r.status}`)}">
             <span class="robot-id">${F.esc(r.id)}</span><span class="robot-batt"><span style="width:${r.battery}%"></span></span><span class="robot-st">${F.esc(r.status)}</span>
-          </div>`).join('')}</div>` : ''}
+          </button>`).join('')}</div>` : ''}
         <h4 class="sub2">Consumables run-out</h4>
         <ul class="consumables">${(w.consumables || []).map((c) => `
           <li data-key="cons-${F.esc(w.site)}-${F.esc(c.item)}-${F.esc(c.runout)}"><span>${F.esc(c.item)}</span>

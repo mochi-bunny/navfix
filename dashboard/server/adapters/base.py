@@ -58,5 +58,16 @@ class MessageSource(Source):
     """-> {"messages": [{"id", "channel", "author", "bot", "text", "at"}]}"""
 
 
+class FeedSource(Source):
+    """-> {"feeds": [{"id", "label", "site", "robot_id", "kind", "url", "refresh_ms"?, "proxy"?}]}
+
+    kind: "mjpeg" | "image" (snapshot, polled every refresh_ms) | "video" (mp4/webm) |
+          "iframe" (e.g. Isaac Sim WebRTC web client) | "synthetic" (mock canvas)
+    """
+
+    def reset(self):
+        pass
+
+
 class SystemSource(Source):
     """-> {"vllm": {...}, "gpu": {...}, "services": [...], "cloud_model_calls": int | None}"""

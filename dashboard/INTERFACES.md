@@ -133,6 +133,28 @@ consumables: [{item, runout (time), need_id}]
 **Clips:** `evidence.clips` entries are file names (or relative paths) under `clips_root`. They are served at
 `/media/clip/<name>` with range support. Paths that escape `clips_root` are refused. MP4 (H.264) plays everywhere.
 
+## 3b. Camera / robot feeds (Isaac Sim, robot cameras)  · owner: ______  · ☐ confirmed
+
+The live feed panel plays any of these per feed. The source is checked in this order:
+`live.feeds.list` in config.json (a static list), then `live.feeds.url` (returns `[Feed]` or
+`{"feeds": [...]}`), then the cell service's `GET /feeds`.
+
+**Feed**: `id`, `label`, `site` (matches warehouse `site`), `robot_id` (matches a warehouse robot `id`;
+omit for a site overview camera), `kind`, `url`, optional `refresh_ms` (for `image`), optional `proxy: true`.
+
+| `kind` | What the browser does | Typical source on the box |
+|---|---|---|
+| `mjpeg` | `<img src=url>` (multipart MJPEG stream) | ROS 2 `web_video_server` on an Isaac Sim camera topic, e.g. `http://127.0.0.1:8081/stream?topic=/globex/cam/image_raw` (default port 8080 clashes with OTP) |
+| `image` | Re-fetches a JPEG/PNG every `refresh_ms` | A sim script writing frames to an HTTP endpoint |
+| `video` | `<video>` (MP4/WebM, autoplay, muted, looped) | Recorded LIBERO/Isaac Sim clips |
+| `iframe` | Embeds a page | Isaac Sim WebRTC web client, e.g. `http://127.0.0.1:8211/streaming/webrtc-client?server=127.0.0.1` |
+| `synthetic` | Draws the cell from robot telemetry | Mock mode only |
+
+`proxy: true` makes the dashboard relay the stream at `/media/feed/<id>`, so the browser only talks to the
+dashboard. Use it when the stream binds to localhost on another machine or port. HLS is not supported
+(it would need a bundled player). Robot status, battery and task on the feed come from §3 `robots[]`,
+not from the stream.
+
 ## 4. Sim clock service  · owner: ______  · ☐ confirmed
 
 Base URL `live.clock.base_url` (default `http://127.0.0.1:7000`)
@@ -178,6 +200,8 @@ the dashboard reads the last 512 KB. Alternatively set `live.messages.url` to an
 
 ## Open questions
 
+0. Isaac Sim pair: which camera streams exist (per cell, per robot), what kind (MJPEG via web_video_server,
+   WebRTC client, recorded clips), and on which ports?
 1. Robot pair: is reliability/trial data served over HTTP by the cell service, or written to a file/SQLite we should read instead?
 2. Travel pair: final ticket format: does it match the Need/VisitEvent fields above? Who serves `GET /events`?
 3. Where do failure clips land on disk, and in what format?

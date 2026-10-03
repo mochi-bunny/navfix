@@ -197,6 +197,17 @@ class Snapshotter:
                                     [c.get("need_id") for c in w["consumables"]] if x})
             warehouse.append(w)
 
+        # Camera / robot feeds, joined to the robot telemetry Fleet reports.
+        robots = {r["id"]: (w["site"], r) for w in warehouse for r in w.get("robots") or []}
+        feeds = []
+        for f in (self.raw.get("feeds") or {}).get("feeds", []):
+            f = dict(f)
+            site_robot = robots.get(f.get("robot_id"))
+            f["robot"] = site_robot[1] if site_robot else None
+            f["site"] = f.get("site") or (site_robot[0] if site_robot else None)
+            f["src"] = "/media/feed/" + quote(str(f["id"]), safe="") if f.get("proxy") else f.get("url")
+            feeds.append(f)
+
         changes = []
         for i, c in enumerate(cal.get("changes", [])):
             c = dict(c, at=self._p(c.get("at") or c.get("timestamp")))
@@ -240,7 +251,7 @@ class Snapshotter:
             "staff": staff, "events": events, "legs": legs, "current_legs": current_legs,
             "jobs": cal.get("jobs", []), "prefs": cal.get("prefs", {}), "changes": changes,
             "needs": needs, "visit_events": visit_events,
-            "reliability": reliability, "commissioning": com, "warehouse": warehouse,
+            "reliability": reliability, "commissioning": com, "warehouse": warehouse, "feeds": feeds,
             "messages": messages, "ops_log": ops_log,
             "system": system,
         }

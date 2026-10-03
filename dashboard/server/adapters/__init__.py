@@ -4,7 +4,7 @@ from pathlib import Path
 from . import live, mock
 from .mock_world import MockWorld
 
-SOURCES = ("tickets", "calendar", "cell", "clock", "messages", "system")
+SOURCES = ("tickets", "calendar", "cell", "clock", "messages", "system", "feeds")
 
 
 def source_modes(cfg):
@@ -31,5 +31,6 @@ def build(cfg, root):
         "clock": pick("clock", lambda: mock.MockClock(world), lambda: live.LiveClock(lv["clock"], demo["start_time"])),
         "messages": pick("messages", lambda: mock.MockMessages(world), lambda: live.LiveMessages(lv["messages"])),
         "system": pick("system", lambda: mock.MockSystem(lv["system"]), lambda: live.LiveSystem(lv["system"])),
+        "feeds": pick("feeds", lambda: mock.MockFeeds(world), lambda: live.LiveFeeds(lv.get("feeds", {}), lv["cell"])),
     }
     return adapters, modes

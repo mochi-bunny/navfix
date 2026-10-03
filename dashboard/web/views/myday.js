@@ -27,7 +27,7 @@ const changeChips = (changes, eventId, unseenIds) => changes
   .slice(-2)
   .map((c) => `<span class="chip-change${unseenIds.has(c.id) ? ' is-unseen' : ''}">${kindChip(c.kind)}</span>`).join('');
 
-on('go-simple', () => { saveSettings({ home: 'simple' }); store.navigate('/'); });
+on('go-simple', () => store.navigate('/plan'));
 
 export function planList(s, events, ctx, changes, unseenIds, { chips = true } = {}) {
   const today = s.clock.date;
@@ -136,7 +136,7 @@ export default {
         <div class="md-who">${avatar(user, 'lg')}<div><div class="md-date">${DOW[d.getUTCDay()]}, ${MON[d.getUTCMonth()]} ${d.getUTCDate()} <span class="pill-today">Today</span></div>
         <div class="md-sub">${F.esc(user.name)} · ${events.length} events · ${pitches} pitch${pitches === 1 ? '' : 'es'}</div></div></div>
         <div class="md-tools">
-          <button class="btn btn-glass" data-action="go-simple" title="Back to the simple plan">${icon('list')} Simple view</button>
+          <button class="btn btn-glass" data-action="go-simple" title="Back to the simple plan">${icon('list')} Scheduler only</button>
           <div class="seg"><button data-action="plan-mode" data-mode="plan" class="${mode === 'plan' ? 'is-on' : ''}">${icon('list')} Plan</button>
             <button data-action="plan-mode" data-mode="timeline" class="${mode === 'timeline' ? 'is-on' : ''}">${icon('calendar')} Timeline</button></div>
           <button class="updates-btn${unseen.length ? ' has-new' : ''}" data-action="open-updates">${icon('refresh')} Updates${unseen.length ? `<span class="count">${unseen.length}</span>` : ''}</button>

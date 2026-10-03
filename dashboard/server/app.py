@@ -5,6 +5,7 @@ Python standard library only, so it runs offline with nothing to install.
 import json
 import os
 import re
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlparse
@@ -14,6 +15,7 @@ from .adapters import build
 from .snapshot import Snapshotter
 
 ROOT = Path(__file__).resolve().parent.parent
+_feed_opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))  # local streams only, no env proxies
 WEB = ROOT / "web"
 TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
          ".css": "text/css; charset=utf-8", ".json": "application/json", ".svg": "image/svg+xml",
@@ -23,7 +25,7 @@ PATH_KEYS = {("calendar", "sqlite_path"), ("cell", "clips_root"), ("messages", "
 
 
 def load_config(path, mode=None, port=None):
-    cfg = json.loads(Path(path).read_text(encoding="utf-8"))
+    cfg = json.loads(Path(path).read_text(encoding="utf-8-sig"))  # tolerate a BOM from Windows editors
     if mode:
         cfg["mode"] = mode
     if port:
@@ -115,6 +117,8 @@ def make_handler(app):
                                         "channels": app.cfg["demo"]["channels"]})
             if path.startswith("/media/clip/"):
                 return self._clip(unquote(path[len("/media/clip/"):]))
+            if path.startswith("/media/feed/"):
+                return self._feed(unquote(path[len("/media/feed/"):]))
             if path.startswith("/static/"):
                 f = (WEB / path[len("/static/"):]).resolve()
                 if WEB in f.parents and f.is_file():
@@ -141,6 +145,34 @@ def make_handler(app):
                 return self._json(501, {"ok": False, "error": "this source has no such control"})
             except Exception as e:
                 return self._json(502, {"ok": False, "error": f"{type(e).__name__}: {e}"})
+
+        def _feed(self, feed_id):
+            """Relay a feed marked "proxy": true (e.g. a camera bound to localhost on another port)
+            so the browser only ever talks to the dashboard. Streams until either side closes."""
+            feeds = (app.snap.raw.get("feeds") or {}).get("feeds", [])
+            f = next((x for x in feeds if str(x.get("id")) == feed_id and x.get("proxy") and x.get("url")), None)
+            if not f:
+                return self._send(404, b"no proxied feed with that id", "text/plain")
+            try:
+                upstream = _feed_opener.open(f["url"], timeout=5)
+            except Exception as e:
+                return self._send(502, f"feed unreachable: {e}".encode(), "text/plain")
+            with upstream:
+                self.send_response(200)
+                self.send_header("Content-Type", upstream.headers.get("Content-Type", "application/octet-stream"))
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Connection", "close")
+                self.end_headers()
+                self.close_connection = True
+                try:
+                    while True:
+                        chunk = upstream.read1(64 * 1024) if hasattr(upstream, "read1") else upstream.read(64 * 1024)
+                        if not chunk:
+                            break
+                        self.wfile.write(chunk)
+                        self.wfile.flush()
+                except (BrokenPipeError, ConnectionResetError, OSError):
+                    pass
 
         def _clip(self, name):
             fpath = app.adapters["cell"].clip_path(name)

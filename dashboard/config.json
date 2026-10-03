@@ -6,7 +6,8 @@
     "cell": null,
     "clock": null,
     "messages": null,
-    "system": null
+    "system": null,
+    "feeds": null
   },
   "host": "0.0.0.0",
   "port": 8090,
@@ -26,6 +27,10 @@
     "clock":    { "base_url": "http://127.0.0.1:7000" },
     "field":    { "base_url": "http://127.0.0.1:7003" },
     "messages": { "jsonl_path": "../shared/messages.jsonl", "url": null },
+    "feeds": {
+      "url": null,
+      "list": []
+    },
     "system": {
       "vllm_url": "http://127.0.0.1:8000",
       "expected_model": "Qwen3.6-35B-A3B NVFP4",
@@ -35,6 +40,7 @@
         { "name": "GR00T server A",  "host": "127.0.0.1", "port": 5555 },
         { "name": "GR00T server B",  "host": "127.0.0.1", "port": 5556 },
         { "name": "OpenTripPlanner", "host": "127.0.0.1", "port": 8080 },
+        { "name": "Isaac Sim stream", "host": "127.0.0.1", "port": 8211 },
         { "name": "Ticket service",  "host": "127.0.0.1", "port": 7001 },
         { "name": "Sim clock",       "host": "127.0.0.1", "port": 7000 }
       ],

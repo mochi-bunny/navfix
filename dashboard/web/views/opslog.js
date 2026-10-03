@@ -2,6 +2,7 @@ import * as F from '../format.js';
 
 export default {
   title: 'Ops log',
+  more: '/ops',
   meta: (s) => `${s.ops_log.length} handoffs`,
   render(s) {
     const today = s.clock.date;

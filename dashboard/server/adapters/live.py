@@ -17,7 +17,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 from .. import timeutil as T
-from .base import CalendarSource, CellSource, ClockSource, MessageSource, SystemSource, TicketSource
+from .base import CalendarSource, CellSource, ClockSource, FeedSource, MessageSource, SystemSource, TicketSource
 
 ENDPOINTS = {
     "tickets": {
@@ -30,6 +30,7 @@ ENDPOINTS = {
         "reliability": "GET /reliability",
         "commissioning": "GET /commissioning",
         "warehouse": "GET /warehouse",
+        "feeds": "GET /feeds",
         "reset": "POST /demo/reset",
     },
     "clock": {
@@ -229,6 +230,32 @@ class LiveCell(CellSource):
 
     def reset(self):
         _call(self.cfg["base_url"], self.p["reset"])
+
+
+# ------------------------------------------------------------------ feeds ---
+class LiveFeeds(FeedSource):
+    """Camera/robot streams. In order of preference: the static list in config
+    (live.feeds.list), a feed-list URL (live.feeds.url), or the cell service's GET /feeds."""
+
+    def __init__(self, cfg, cell_cfg):
+        self.cfg, self.cell = cfg, cell_cfg
+
+    def read(self):
+        if self.cfg.get("list"):
+            rows = self.cfg["list"]
+        elif self.cfg.get("url"):
+            req = urllib.request.Request(self.cfg["url"], headers={"Accept": "application/json"})
+            with _opener.open(req, timeout=1.5) as r:
+                rows = _list(json.loads(r.read()), "feeds")
+        else:
+            rows = _list(_call(self.cell["base_url"], _paths("cell", self.cell)["feeds"]), "feeds")
+        feeds = []
+        for f in rows:
+            fid = str(_pick(f, "id", "feed_id", "name"))
+            feeds.append({**f, "id": fid, "label": _pick(f, "label", "name", default=fid),
+                          "robot_id": _pick(f, "robot_id", "robot"), "kind": _pick(f, "kind", "type", default="mjpeg"),
+                          "url": _pick(f, "url", "src", "stream_url")})
+        return {"feeds": feeds}
 
 
 # ------------------------------------------------------------------ clock ---

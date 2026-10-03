@@ -4,7 +4,7 @@ import * as F from '../format.js';
 const W = 1100, H = 380, M = { l: 56, r: 170, t: 20, b: 44 };
 const PW = W - M.l - M.r, PH = H - M.t - M.b;
 
-function chart(c) {
+export function chart(c) {
   const maxN = Math.max(30, c.trials.length + 2);
   const x = (n) => M.l + (n / maxN) * PW;
   const y = (p) => M.t + (1 - p) * PH;

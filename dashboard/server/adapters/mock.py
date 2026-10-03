@@ -1,7 +1,7 @@
 """Mock adapters: one per source, all reading the shared in-process MockWorld."""
 import random
 
-from .base import CalendarSource, CellSource, ClockSource, MessageSource, SystemSource, TicketSource
+from .base import CalendarSource, CellSource, ClockSource, FeedSource, MessageSource, SystemSource, TicketSource
 
 
 class MockTickets(TicketSource):
@@ -81,6 +81,29 @@ class MockMessages(MessageSource):
 
     def read(self):
         return {"messages": self.w.state()["messages"]}
+
+
+class MockFeeds(FeedSource):
+    """One overview camera per site and one camera per robot, drawn in the browser.
+    Drop a recording at fixtures/clips/<feed id>.mp4 (e.g. cam-globex.mp4, G-03.mp4) to play it instead."""
+
+    def __init__(self, world):
+        self.w = world
+
+    def _feed(self, fid, label, site, robot_id=None):
+        clip = self.w.fixtures_dir / "clips" / f"{fid}.mp4"
+        if clip.is_file():
+            return {"id": fid, "label": label, "site": site, "robot_id": robot_id, "kind": "video",
+                    "url": f"/media/clip/{fid}.mp4", "simulated": True}
+        return {"id": fid, "label": label, "site": site, "robot_id": robot_id, "kind": "synthetic", "simulated": True}
+
+    def read(self):
+        feeds = []
+        for w in self.w.state()["warehouse"]:
+            feeds.append(self._feed(f"cam-{w['site']}", f"{w['name']} cell overview", w["site"]))
+            for r in w.get("robots", []):
+                feeds.append(self._feed(r["id"], f"{r['id']} · {r['zone']}", w["site"], r["id"]))
+        return {"feeds": feeds}
 
 
 class MockSystem(SystemSource):

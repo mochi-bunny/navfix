@@ -3,9 +3,10 @@ import { VIEWS } from './views/index.js';
 import * as F from './format.js';
 import { icon, logo } from './icons.js';
 import {
-  store, actions, applySettings, settings, currentUser, setUser, avatar, unseenChanges, unseenFleet, closeDrawer,
+  store, actions, applySettings, currentUser, setUser, avatar, unseenChanges, unseenFleet, closeDrawer,
 } from './state.js';
 import { openEvent } from './drawers.js';
+import { startFeedLoop, stepFeed } from './feeds.js';
 
 const $ = (sel, el = document) => el.querySelector(sel);
 let receivedAt = 0;
@@ -38,7 +39,6 @@ function tickClock() {
 const compiled = ROUTES.map((r) => ({ ...r, re: new RegExp('^' + r.path.replace(/:(\w+)/g, '(?<$1>[^/]+)') + '/?$') }));
 
 function match(path) {
-  if (path === '/' && settings().home === 'full') path = '/day';
   for (const r of compiled) {
     const m = path.match(r.re);
     if (m) return { route: r, params: Object.fromEntries(Object.entries(m.groups || {}).map(([k, v]) => [k, decodeURIComponent(v)])) };
@@ -68,7 +68,8 @@ function mount() {
     sec.className = `panel panel-${id}${route.bare ? ' is-bare' : ''}`;
     sec.dataset.view = id;
     sec.innerHTML = route.bare ? '<div class="panel-body"></div>'
-      : `<header class="panel-head"><h2 class="panel-title">${F.esc(v.title)}</h2><div class="panel-meta"></div></header><div class="panel-body"></div>`;
+      : `<header class="panel-head"><h2 class="panel-title">${F.esc(v.title)}</h2><div class="panel-meta"></div>${v.more && v.more !== route.path
+        ? `<a class="panel-more" href="${v.more}" data-nav title="Open the full view">Open ${icon('chevron')}</a>` : ''}</header><div class="panel-body"></div>`;
     main.appendChild(sec);
     panels.set(id, { el: sec, seen: null });
     v.init?.(sec);
@@ -145,7 +146,7 @@ function railItem(r, badges) {
   const active = current && (current.route.path === r.path
     || (r.path === '/needs' && current.route.path.startsWith('/need')));
   const n = r.badge ? badges[r.badge] : 0;
-  return `<a href="${r.path}" data-nav class="rail-item${active ? ' is-active' : ''}" title="${F.esc(r.title)}${r.key ? ` (${r.key})` : ''}">
+  return `${r.railSep ? '<div class="rail-sep sm"></div>' : ''}<a href="${r.path}" data-nav class="rail-item${active ? ' is-active' : ''}" title="${F.esc(r.title)}${r.key ? ` (${r.key})` : ''}">
     ${icon(r.icon)}<span class="rail-label">${F.esc(r.title)}</span>${n ? `<span class="count">${n}</span>` : ''}</a>`;
 }
 
@@ -293,6 +294,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && store.ui.drawer) { closeDrawer(); return; }
   if (e.key === 'Escape' && store.ui.menuOpen) { store.ui.menuOpen = false; render(); return; }
   if (e.metaKey || e.ctrlKey || e.altKey || /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName)) return;
+  if ((e.key === '[' || e.key === ']') && document.querySelector('.panel-feed')) { stepFeed(e.key === ']' ? 1 : -1); return; }
   const r = compiled.find((x) => x.key && x.key === e.key.toLowerCase());
   if (r) navigate(r.path);
 });
@@ -306,6 +308,7 @@ document.addEventListener('keydown', (e) => {
   if (!ALWAYS.clock) $('#clock').hidden = true;
   if (!ALWAYS.localProofStrip) $('#proof-strip').hidden = true;
   poll();
+  startFeedLoop();
   setInterval(tickClock, 250);
   setInterval(() => store.snap && render(), 1000); // keeps "now" lines and countdowns moving between polls
 })();

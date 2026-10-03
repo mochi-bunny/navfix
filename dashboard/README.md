@@ -1,6 +1,7 @@
 # Fleet & Field dashboard
 
-A dashboard for the recorded demo: each person's day plan, plus what Fleet sees. It runs entirely on the GB10: Python 3.9+ standard library
+A command-center dashboard for the recorded demo. It covers fleet surveillance (live camera/robot feeds,
+robot status, skill gates, alerts) and the field scheduler side by side. It runs entirely on the GB10: Python 3.9+ standard library
 on the server, plain JS/CSS in the browser. There is nothing to install, no CDN, no remote fonts, and no LLM calls.
 
 ## Start (one command)
@@ -28,17 +29,26 @@ Live endpoints, paths and field names are in **[INTERFACES.md](INTERFACES.md)**,
 
 ## Views (each has its own URL; keys work while recording)
 
-**Home (`/`) is the simple plan:** just the viewer's day, plus two controls. **+ Add change** adds a new event
-or moves/renames one already in the plan; Field checks for conflicts first. The **menu** switches to the
-**Full view** or to another person. The full view's "Simple view" button comes back here, and the choice is
-remembered (also in Settings → Home page).
+**Home (`/`) is the command center**, everything on one screen:
 
-In the full view, the left rail has the main pages, then the staff avatars (click one to view as that person), then Settings.
+- **Live feed** (biggest panel): one camera or robot stream with a HUD (robot status, task, battery, and the
+  commissioning trial when one is running). Switch with the site tabs, the robot chips, `[` / `]`, or by
+  clicking any robot or "Watch" button anywhere on the dashboard.
+- **Fleet status**: alerts (open Needs, blocked robots) and one row per site.
+- **Robots**: every robot by site; click to watch it.
+- **Skill gates**: the live commissioning chart and every site × skill gate.
+- **Scheduler** on the side: the viewer's day in compact form, with *Scheduler only*, *Add change*, and *My day*.
+- **Ops log**: cross-agent handoffs.
+
+Every panel's **Open ›** link goes to its deep dive. The left rail is grouped as surveillance, then scheduler,
+then ops & proof, followed by the staff avatars (click one to view as that person) and Settings.
 
 | Key | URL | View |
 |---|---|---|
-| m | `/` | Simple plan (or the full view if the viewer chose it) |
-| 1 | `/day` | **My day**: the viewer's own plan, the simplest layout (Plan list or Timeline), travel between events, a "now" marker. **Updates** button (top right) lists plan changes this person hasn't seen yet |
+| 1 | `/` | **Command center** |
+| l | `/live` | **Live feeds**, full size, with the robot list |
+| m | `/plan` | **Scheduler only**: just the plan, plus *Add change* and a menu (Dashboard, Full day view, switch person) |
+| d | `/day` | **My day**: the viewer's own plan, the simplest layout (Plan list or Timeline), travel between events, a "now" marker. **Updates** button (top right) lists plan changes this person hasn't seen yet |
 | 2 | `/calendar` | Team calendar, all staff |
 | 3 | `/needs` | Needs feed |
 | f | `/fleet` | **Fleet watch**: what Fleet is surveying (sites, robots, skill gates, commissioning) and which signals made it into the plan |
@@ -51,7 +61,7 @@ In the full view, the left rail has the main pages, then the staff avatars (clic
 | 5 6 7 8 0 | `/reliability` `/commissioning` `/warehouse` `/leg` `/discord` | Single views full screen |
 | c | `/control` | Demo control panel (not in the rail) |
 
-Open a drawer straight from the URL: `/?add=1` (Add change), `/?menu=1` (open the menu), `/?event=E4`
+Open a drawer straight from the URL: `/plan?add=1` (Add change), `/plan?menu=1` (open the menu), `/?event=E4`
 (event details + edit), `/day?updates=1` (updates list), `/?user=s2` (view as Sam). Esc closes a drawer.
 
 The sim clock and a one-line local-proof strip are on every page. Anything that just appeared or changed
@@ -107,8 +117,32 @@ server/app.py          HTTP server, demo controls, clip streaming
 server/snapshot.py     reads all adapters in the background, normalises, derives links
 server/adapters/       one adapter per source: live.py, mock.py (+ mock_world.py)
 web/                   index.html, app.js (shell/router/poller), state.js (viewer, settings, seen, drawer),
-                       drawers.js (event edit, updates), icons.js, theme.css, base.css, layout.js, views/
+                       drawers.js (event edit, updates), feeds.js (feed switching, simulated camera),
+                       icons.js, theme.css, base.css, layout.js, views/
 ```
+
+## Live feeds (Isaac Sim / robot cameras)
+
+Mock mode draws a **simulated camera** for each site and robot, from Fleet's robot telemetry, labelled
+SIMULATED on screen. To use real video before the streams exist, drop a recording at
+`fixtures/clips/<feed id>.mp4` (e.g. `cam-globex.mp4`, `G-03.mp4`) and it plays instead.
+
+To connect the real streams, set `"feeds": "live"` under `sources` (or the global mode) and list them in
+`config.json`:
+
+```json
+"feeds": { "list": [
+  { "id": "cam-globex", "label": "Globex cell overview", "site": "globex", "kind": "iframe",
+    "url": "http://127.0.0.1:8211/streaming/webrtc-client?server=127.0.0.1" },
+  { "id": "G-03", "label": "G-03 wrist cam", "site": "globex", "robot_id": "G-03", "kind": "mjpeg",
+    "url": "http://127.0.0.1:8081/stream?topic=/globex/g03/image_raw", "proxy": true }
+] }
+```
+
+Supported kinds: `mjpeg`, `image` (polled snapshot), `video`, `iframe` (e.g. Isaac Sim's WebRTC web
+client), `synthetic`. Or have the cell service serve `GET /feeds`. See INTERFACES.md §3b.
+
+## Clips
 
 Clips: put MP4s under `live.cell.clips_root` and list their file names in a Need's `evidence.clips`.
 No clips ship with the mock, so the Need page shows a "clip not found" placeholder until you drop the

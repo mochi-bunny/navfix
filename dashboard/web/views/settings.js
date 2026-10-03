@@ -22,7 +22,6 @@ function appearance() {
     ${row('Density', 'Compact fits more on one screen.', opt('density', 'comfortable', 'Comfortable', s.density) + opt('density', 'compact', 'Compact', s.density))}
     ${row('Clock', 'How times are written everywhere.', opt('clock24', false, '12-hour', s.clock24) + opt('clock24', true, '24-hour', s.clock24))}
     ${row('Highlight changes', 'Briefly highlight anything that just appeared or changed.', opt('highlight', true, 'On', s.highlight) + opt('highlight', false, 'Off', s.highlight))}
-    ${row('Home page', 'What opens first: just the plan, or the full view.', opt('home', 'simple', 'Simple plan', s.home) + opt('home', 'full', 'Full view', s.home))}
     ${row('My day opens as', 'The default layout of the day plan.', opt('planMode', 'plan', 'Plan', s.planMode) + opt('planMode', 'timeline', 'Timeline', s.planMode))}
     <div class="set-row"><div class="muted small">Saved in this browser only.</div><button class="btn btn-sm" data-action="set-reset">${icon('undo')} Reset to defaults</button></div>
   </div>`;

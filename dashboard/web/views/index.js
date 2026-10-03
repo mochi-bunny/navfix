@@ -16,8 +16,13 @@ import fleetupdates from './fleetupdates.js';
 import incorporated from './incorporated.js';
 import settings from './settings.js';
 import simple from './simple.js';
+import feed from './feed.js';
+import fleetstatus from './fleetstatus.js';
+import robots from './robots.js';
+import gates from './gates.js';
+import schedside from './schedside.js';
 
 export const VIEWS = {
-  simple, myday, calendar, needs, need, reliability, commissioning, warehouse, leg, opslog, discord, proof, control,
+  feed, fleetstatus, robots, gates, schedside, simple, myday, calendar, needs, need, reliability, commissioning, warehouse, leg, opslog, discord, proof, control,
   changes, fleetupdates, incorporated, settings,
 };
