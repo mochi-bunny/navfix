@@ -1,71 +1,65 @@
 # Hyperion
 
 <p align="left">
-  <img alt="Isaac Sim" src="https://img.shields.io/badge/Isaac_Sim_6.0-76B900?style=for-the-badge&logo=nvidia&logoColor=white" />
-  <img alt="Dell Pro Max GB10" src="https://img.shields.io/badge/Dell_Pro_Max_GB10-007DB8?style=for-the-badge&logo=dell&logoColor=white" />
+  <img alt="Local LLMs" src="https://img.shields.io/badge/100%25_Local_LLMs-111111?style=for-the-badge&logo=nvidia&logoColor=76B900" />
+  <img alt="Qwen" src="https://img.shields.io/badge/Qwen3.6_35B_NVFP4-615CED?style=for-the-badge" />
   <img alt="vLLM" src="https://img.shields.io/badge/vLLM-30A2FF?style=for-the-badge" />
-  <img alt="NemoClaw" src="https://img.shields.io/badge/NemoClaw-76B900?style=for-the-badge&logo=nvidia&logoColor=white" />
-  <img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
-  <img alt="Discord" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" />
+  <img alt="NemoClaw" src="https://img.shields.io/badge/NemoClaw_Sandbox-76B900?style=for-the-badge&logo=nvidia&logoColor=white" />
+  <img alt="Dell Pro Max GB10" src="https://img.shields.io/badge/Dell_Pro_Max_GB10-007DB8?style=for-the-badge&logo=dell&logoColor=white" />
+  <a href="https://discord.gg/KRZSbK4Qt"><img alt="Discord" src="https://img.shields.io/badge/Join_the_Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" /></a>
 </p>
 
-**Finds the problem. Finds the person. Gets them there.**
+**Finds the problem. Finds the person. Gets them there. Without a single cloud call.**
 
-Hyperion is an always-on operations supervisor that lives in your team's chat and runs entirely on one
-box. Its first deployment is a 20-robot warehouse: NVIDIA Nova Carters working the aisles in Isaac Sim.
-When a robot jams, overheats, runs low, or a shelf comes up short, a supervisor LLM spots it within
-seconds, traces it to the root cause (the robot that stopped first, not the five queued behind it) and
-opens a ticket with the evidence. A scheduler LLM turns that ticket into a plain-English card in Discord,
-where the person on shift approves the fix with one ✅. A live command center shows the whole floor, the
-tickets, and real camera video from inside the sim, down to a chase camera on any single robot. The
-simulator, both models, the agents, the dashboard and the bot all run on a single Dell Pro Max GB10, and
-no model call ever leaves the box.
+Hyperion is an operations supervisor built from two LLMs that run entirely on one Dell Pro Max GB10. A
+**supervisor agent** reads live telemetry, decides what actually needs a person, traces each incident
+to its root cause and opens a ticket with the evidence. A **scheduler LLM** turns every ticket into a
+plain-English card in Discord, where the person on shift approves the fix with one ✅. Both models are
+the same Qwen3.6-35B served by vLLM on the box, the agent lives in a NemoClaw sandbox that can reach its
+own tools and nothing else, and no prompt, log, location or camera frame is ever sent to a cloud model.
+The first deployment is a 20-robot warehouse simulated in Isaac Sim on the same machine.
 
-**Runs on:** one Dell Pro Max GB10, 128 GB unified memory, nothing in the cloud
+**Runs on:** one Dell Pro Max GB10, 128 GB unified memory, zero cloud model calls
+**Discord:** [discord.gg/KRZSbK4Qt](https://discord.gg/KRZSbK4Qt), where the scheduler posts its cards and takes approvals
 **Built for:** Dell Pro Max with GB10 Hackathon, 2026-10-03, Hult International Business School, Cambridge MA
 
 <p align="center">
-  <img src="docs/img/hero.gif" alt="Nova Carters driving through the pack bays in the Isaac Sim warehouse" width="760" />
+  <img src="docs/img/needs.png" alt="Tickets written by the local supervisor LLM" width="900" /><br/>
+  <sub>Every ticket here was written by the local supervisor LLM, including a deadlock traced back to the robot that stopped first.</sub>
 </p>
 
 ---
 
 ## Snapshot
 
-- Real Isaac Sim on the GB10 itself: 20 Nova Carters on aarch64, one-way traffic, junction locks,
-  drive-through pack bays, and a red beacon over any robot in trouble
-- Two local LLMs from one model server: Qwen3.6-35B-A3B (NVFP4) on vLLM runs both the supervisor agent
-  and the scheduler bot
-- A supervisor agent that can only touch its own tools: OpenClaw inside a NemoClaw sandbox, with 11 tools
-  over the live fleet and thinking turned on
-- Discord as the control room: incidents land in `#red-room` with an LLM-written debrief, decisions land
-  in `#approvals`, and a ✅ or ❌ flows straight back into the ticket
-- A live command center: flip between the floor map and real Isaac video, step through 24 feeds, click
-  any robot for its chase camera with status, task and battery on the frame
-- Code enforces, the model explains: detection, spacing, locks, ticket states and the commissioning gate
-  are all code; the LLMs decide what to say, what to escalate and to whom
-- Measured on the box, not assumed: fault detected in 2 to 3 s, root-cause ticket in 15 to 94 s, Discord
-  cards about 4 s later, and 0 robot overlaps across 30 sim-minutes × 3 seeds
+- **Two local LLMs, one model server:** `nvidia/Qwen3.6-35B-A3B-NVFP4` on vLLM serves both the
+  supervisor agent and the scheduler bot, sharing the GB10's 128 GB of unified memory with the simulator
+- **A supervisor that reasons, not just alerts:** an OpenClaw agent with thinking on, 11 tools over the
+  live operation, and one ticket per root cause instead of one per symptom
+- **Sandboxed by design:** the agent runs inside a NemoClaw (OpenShell) sandbox whose only way out is
+  its own tool service; anything else it tries is refused
+- **A scheduler LLM for people:** writes the debrief and headline for every card in under a second,
+  posts to Discord, and turns ✅ / ❌ reactions back into ticket updates
+- **Code enforces, the model explains:** detection, thresholds, ticket states and the trust gate are
+  code; the LLMs decide what matters, what to say, and to whom
+- **Private by construction:** operations data, footage and where your people are never leave the
+  box; the dashboard shows `cloud model calls: not wired` because there is no path to one
+- **Measured on the box:** problem detected in 2 to 3 s, root-cause ticket from the agent in 15 to 94 s,
+  Discord card about 4 s later, scheduler debriefs in 0.4 to 0.9 s
 
 <p align="center">
   <img src="docs/img/deployment.png" alt="The GB10's own screen: Isaac Sim on the left, the command center on the right" width="900" /><br/>
-  <sub>The submission as it runs: Isaac Sim and the command center side by side on the GB10's own screen.</sub>
+  <sub>Everything on one screen and one box: the simulated warehouse, and the command center fed by both local LLMs.</sub>
 </p>
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/img/command-center.png" alt="Command center with the AMR-00 chase camera" /></td>
-    <td width="50%"><img src="docs/img/isaac-cameras.png" alt="Four Isaac Sim camera angles" /></td>
+    <td width="50%"><img src="docs/img/command-center.png" alt="Command center with a live robot camera" /></td>
+    <td width="50%"><img src="docs/img/hero.gif" alt="Robots driving through the simulated warehouse" /></td>
   </tr>
   <tr>
-    <td><sub>AMR-00's chase camera, live from Isaac, with its status on the frame.</sub></td>
-    <td><sub>Fixed cameras: overview, aisle and pack bays, plus one chase camera per robot.</sub></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="docs/img/needs.png" alt="Tickets written by the supervisor LLM" /></td>
-  </tr>
-  <tr>
-    <td colspan="2"><sub>Tickets written by the supervisor LLM: a deadlock is traced back to the robot that stopped first.</sub></td>
+    <td><sub>Command center: tickets, fleet status and live camera video from the sim.</sub></td>
+    <td><sub>The first deployment: 20 robots in a simulated warehouse, on the same GB10.</sub></td>
   </tr>
 </table>
 
@@ -74,14 +68,14 @@ no model call ever leaves the box.
 ## Built With
 
 <p align="left">
+  <img alt="vLLM" src="https://img.shields.io/badge/vLLM-30A2FF?style=flat-square" />
+  <img alt="Qwen" src="https://img.shields.io/badge/Qwen3.6--35B--A3B_NVFP4-615CED?style=flat-square" />
+  <img alt="OpenClaw" src="https://img.shields.io/badge/OpenClaw_agent-111111?style=flat-square" />
+  <img alt="NemoClaw" src="https://img.shields.io/badge/NemoClaw_%2F_OpenShell-76B900?style=flat-square&logo=nvidia&logoColor=white" />
   <img alt="Python" src="https://img.shields.io/badge/Python_3.12-3776AB?style=flat-square&logo=python&logoColor=white" />
-  <img alt="Isaac Sim" src="https://img.shields.io/badge/Isaac_Sim-76B900?style=flat-square&logo=nvidia&logoColor=white" />
-  <img alt="OpenUSD" src="https://img.shields.io/badge/OpenUSD-333333?style=flat-square" />
-  <img alt="vLLM" src="https://img.shields.io/badge/vLLM_(Qwen3.6_NVFP4)-30A2FF?style=flat-square" />
-  <img alt="NemoClaw" src="https://img.shields.io/badge/NemoClaw_+_OpenClaw-76B900?style=flat-square&logo=nvidia&logoColor=white" />
   <img alt="discord.py" src="https://img.shields.io/badge/discord.py-5865F2?style=flat-square&logo=discord&logoColor=white" />
   <img alt="aiohttp" src="https://img.shields.io/badge/aiohttp-2C5BB4?style=flat-square&logo=aiohttp&logoColor=white" />
-  <img alt="OpenCV" src="https://img.shields.io/badge/OpenCV-5C3EE8?style=flat-square&logo=opencv&logoColor=white" />
+  <img alt="Isaac Sim" src="https://img.shields.io/badge/Isaac_Sim-76B900?style=flat-square&logo=nvidia&logoColor=white" />
   <img alt="Docker Compose" src="https://img.shields.io/badge/Docker_Compose-2496ED?style=flat-square&logo=docker&logoColor=white" />
 </p>
 
@@ -90,27 +84,35 @@ no model call ever leaves the box.
 ## What It Does
 
 ### For the people on shift
-- See the whole floor at a glance: robots, batteries, deliveries per minute, open tickets
-- Flip the live feed between the floor map and real camera video from the sim, or open any robot's own
-  chase camera with its status on the frame
-- Read incidents in plain English, not error codes: what broke, which orders are at risk, what to do
-- Approve or reject a fix from Discord with one reaction and watch the ticket move to `rescheduled`
-- Ask the supervisor anything about the floor ("which robots are waiting for traffic, and why?") and get
-  an answer built from live telemetry
+- Get told about problems in plain English in [Discord](https://discord.gg/KRZSbK4Qt), not as error
+  codes: what broke, why, which orders are at risk, and what to do next
+- Approve or reject a fix with one reaction; the ticket updates itself
+- Ask the supervisor anything about the operation ("which robots are waiting for traffic, and why?") and
+  get an answer built from live data, not a guess
+- Watch it all on a live command center: tickets, fleet status, and camera video from the sim
 
-### Behind the scenes
-- Nine detectors read live telemetry eight times a second: stuck robots (after 2 s), deadlock clusters,
-  drive faults, overheating, low battery, inventory mismatches, low stock, stale telemetry and
-  throughput drops; a robot that is only yielding to traffic gets a 15 s grace instead of a ticket
-- The supervisor LLM is woken by a webhook, pulls what it needs through its tools, and opens one ticket
-  per root cause; a second report of the same event or robot updates the open ticket instead of
-  duplicating it
-- Ticket states are enforced in code (`open → acknowledged → rescheduled → resolved`, plus `escalated`
-  and `failed`), so neither model can skip a step or reopen a closed ticket
-- navbot has its own LLM write the debrief and headline in under a second, posts the cards, and sends
-  approvals back as ticket updates
-- A new robot skill only goes live when a Thompson-sampling bandit is 95% sure its success rate is at
-  least 80%, measured on real GR00T policy trials on the same box
+### Behind the scenes: the supervisor LLM
+- Woken by a webhook the moment code detects a problem, then pulls what it needs through 11 tools:
+  fleet state, a single robot, zone inventory, metrics, events, tickets, trust and commissioning
+- Thinks before it acts (reasoning on, Qwen chat-template thinking), so a five-robot jam becomes one
+  ticket that names the robot that stopped first, not five tickets
+- Writes tickets with evidence, priority and a deadline; a repeat report of the same event updates the
+  open ticket instead of duplicating it
+- Runs inside a NemoClaw sandbox: it can call its tool service and nothing else
+
+### Behind the scenes: the scheduler LLM
+- Lives in navbot, the Discord bot, and calls the same local Qwen model
+- Writes the debrief for `#red-room` cards and the headlines for recaps and ETAs, in 0.4 to 0.9 s
+- Routes approvals to `#approvals` and sends every ✅ / ❌ back to the supervisor as a ticket update
+
+### Behind the scenes: the guardrails in code
+- Nine detectors read telemetry eight times a second (stuck, deadlock, drive fault, overheat, low
+  battery, inventory mismatch, low stock, stale telemetry, throughput drop), so the model never has to
+  watch a firehose
+- Ticket states are an allow-list (`open → acknowledged → rescheduled → resolved`, plus `escalated` and
+  `failed`); neither model can skip a step or reopen a closed ticket
+- Nothing new goes live on faith: a Thompson-sampling gate only commissions a new robot skill once it is
+  95% sure the success rate is at least 80%
 
 ---
 
@@ -118,25 +120,21 @@ no model call ever leaves the box.
 
 ```text
 navfix/
-  fleetops/                      Integration: sim, Isaac, glue, deployment
-    sim/fleet.py                   Fleet logic: Dijkstra routing on a one-way loop, junction locks,
-                                   slot reservations, holding loop, inventory, shrink, faults
-    sim/sim_bridge.py              Telemetry, events and the demo-fault queue (:3001)
-    sim/pusher.py                  Pushes a fleet (Isaac or headless) to the bridge
-    sim/fleet_runner.py            Headless sim for when Isaac is closed
-    sim/test_fleet.py              30-sim-minute traffic test: overlaps, deadlocks, throughput
-    isaac/warehouse_live.py        Isaac Sim warehouse, 20 Nova Carters, MJPEG cameras (:8212)
-    glue/fleetops_glue.py          Dashboard sources + ticket forwarding to navbot (:7100)
-    docker/                        One image, six services, compose with health checks
-    fleetops.sh                    start | stop | status | isaac | headless | reset-demo | build
-    tools/                         e2e.sh, ask_agent.sh, screen_layout.py, read_card.py
-  supervisor/
+  supervisor/                    The supervisor LLM's world
     tools_service.py               Detectors, tickets, trust and commissioning (:8090)
-    bandit.py                      Thompson-sampling commissioning gate
-    tools.json                     The 11 tools the supervisor agent can call
-    openclaw/                      Supervisor skill and agent instructions for OpenClaw
+    tools.json                     The 11 tools the agent can call
+    openclaw/                      Agent instructions and the supervisor skill for OpenClaw
+    bandit.py                      Thompson-sampling trust gate
   navbot/                        Discord bot + scheduler LLM (:8787), see navbot/README.md
   dashboard/                     Command center (:8095), see dashboard/README.md
+  fleetops/                      Integration and deployment
+    glue/fleetops_glue.py          Supervisor tickets -> navbot and the dashboard (:7100)
+    enable_thinking.sh             Turns on the agent's reasoning mode
+    docker/                        One image, six services, compose with health checks
+    fleetops.sh                    start | stop | status | isaac | headless | reset-demo | build
+    tools/                         e2e.sh (timed end-to-end), ask_agent.sh (talk to the supervisor)
+    sim/                           The warehouse: fleet logic, sim bridge (:3001), headless runner
+    isaac/warehouse_live.py        Isaac Sim scene with live cameras (:8212)
   docs/img/                      Screenshots and the demo GIF used here
 ```
 
@@ -144,32 +142,32 @@ navfix/
 
 ## Project Details
 
-- Hardware: one Dell Pro Max GB10 (Grace Blackwell, aarch64, 128 GB unified memory) runs everything
-- Simulation: Isaac Sim 6.0 via pip on aarch64; the static warehouse is built offline into one USD file
-  and referenced in a single step, robots are posed by the fleet logic with physics off on the chassis
-- Models: `nvidia/Qwen3.6-35B-A3B-NVFP4` on vLLM, shared by the supervisor agent and the scheduler bot
-- Supervisor agent: OpenClaw in a NemoClaw (OpenShell) sandbox; its only way out is its own tool service
-- Services: bridge, headless sim, supervisor tools, glue, dashboard and navbot in one Docker image, with
-  host networking, health checks and `restart: unless-stopped`
-- Cameras: replicator RGB annotators encoded to JPEG and served as MJPEG, relayed by the dashboard
-- Secrets: Discord token and shared keys live in owner-only env files, never in the image or in git
-- Team: Ferbin (integration, Isaac Sim, fleet logic, supervisor LLM, deployment), Thiago (supervisor tool
-  service and skill, business model), Megha (navbot, scheduler, command center), Amal (command center UI)
+- Model: `nvidia/Qwen3.6-35B-A3B-NVFP4`, a 35B mixture-of-experts with about 3B active per token, in
+  NVIDIA's 4-bit NVFP4 format, served by vLLM at half the GPU memory so the simulator fits alongside
+- Supervisor agent: OpenClaw in a NemoClaw / OpenShell sandbox, reasoning on, tool search off so it
+  always sees its full toolset, webhook-triggered
+- Scheduler LLM: navbot calls the same vLLM endpoint over an OpenAI-compatible API on localhost
+- Hardware: one Dell Pro Max GB10 (Grace Blackwell, aarch64, 128 GB unified memory) runs the model, both
+  agents, the simulator and the dashboard together
+- Services: tool service, glue, dashboard, Discord bot, sim bridge and headless sim in one Docker image,
+  host networking, health checks, `restart: unless-stopped`
+- Secrets: the Discord token and shared keys live in owner-only env files, never in the image or in git
+- Team: Ferbin (integration, supervisor LLM setup, simulation, deployment), Thiago (supervisor tool
+  service and skill, business model), Megha (navbot, scheduler LLM, command center), Amal (command
+  center UI)
 
 ---
 
 ## Data Model
 
-Everything flows through two records. An **event** is what the code saw: a type (`stuck`, `deadlock`,
-`drive_fault`, `overheat`, `low_battery`, `inventory_mismatch`, `low_stock`, `telemetry_stale`,
-`throughput_drop`), the robot or robots involved, the zone,
-a severity and a timestamp. A **ticket** is what the supervisor decided to do about it: the `event_id`
-it came from, `robot_id`, `zone`, a plain-English `reason`, `priority`, `needed_by`, the `evidence` the
-model cited, an `assignee` and `eta` filled in by the scheduler side, and a `history` of every state
-change with who made it and why. Tickets are written by the supervisor's tools only, state moves are
-checked against an allow-list, and the glue forwards each new ticket to navbot as `TASK_FAILED` (plus
-`APPROVAL_REQUEST` when the fix changes the schedule). Commissioning trials and the bandit's posterior
-are kept in a separate trust store, so a skill's record survives restarts.
+Two records connect the code and the models. An **event** is what the code saw: a type, the robot or
+robots involved, the zone, a severity and a timestamp. A **ticket** is what the supervisor LLM decided:
+the `event_id` it came from, `robot_id`, `zone`, a plain-English `reason`, `priority`, `needed_by`, the
+`evidence` the model cited, an `assignee` and `eta` from the scheduler side, and a `history` of every
+state change with who made it and why. Only the supervisor's tools can write tickets, every state change
+is checked against the allow-list, and the glue forwards each new ticket to the scheduler LLM as
+`TASK_FAILED` (plus `APPROVAL_REQUEST` when the fix changes the schedule). The trust gate keeps its own
+store of trials, so a skill's record survives restarts.
 
 ---
 
@@ -179,46 +177,46 @@ are kept in a separate trust store, so a skill's record survives restarts.
 - A Dell Pro Max GB10 (or DGX Spark) with Docker and the NVIDIA container runtime
 - vLLM serving `nvidia/Qwen3.6-35B-A3B-NVFP4` on port 8000
 - A NemoClaw sandbox running the OpenClaw gateway, with the skill from `supervisor/openclaw/`
-- Isaac Sim 6.0 installed with pip into `~/isaacsim-env` (aarch64 wheels from pypi.nvidia.com)
 - A Discord bot token and channel ids in `navbot/.env` (see `navbot/.env.example`)
+- Optional: Isaac Sim 6.0 in `~/isaacsim-env` for the 3D warehouse (a headless sim runs without it)
 
 ### Install & Run
 
 ```bash
-git clone -b fleetops-integration https://github.com/mochi-bunny/navfix
+git clone https://github.com/mochi-bunny/navfix
 cd navfix/fleetops
 
 ./fleetops.sh start                # model check, six containers in order, agent check
-./fleetops.sh isaac                # Isaac Sim on the screen becomes the live sim
-python3 tools/screen_layout.py     # Isaac left, command center right -> http://localhost:8095
-./fleetops.sh status
+./fleetops.sh isaac                # optional: the Isaac Sim warehouse becomes the live source
+./fleetops.sh status               # command center -> http://localhost:8095
 ```
 
-Try a fault end to end, or ask the supervisor a question:
+Talk to the supervisor, or run a timed incident end to end:
 
 ```bash
-tools/e2e.sh stuck                 # inject, then time detection -> ticket -> dashboard -> Discord
 tools/ask_agent.sh "Which robots are waiting for traffic, and why?"
+tools/e2e.sh stuck                 # inject, then time detection -> LLM ticket -> dashboard -> Discord
 ```
 
-Full deployment notes are in [`fleetops/README.md`](./fleetops/README.md).
+Then watch the cards arrive in the [Discord](https://discord.gg/KRZSbK4Qt). Full deployment notes are in
+[`fleetops/README.md`](./fleetops/README.md).
 
 ---
 
 ## Roadmap
 
 ### Shipped for the hackathon
-- [x] Isaac Sim warehouse with 20 Nova Carters, running on the GB10 itself
-- [x] Supervisor LLM with tools, root-cause tickets and code-enforced ticket states
-- [x] Scheduler LLM and Discord cards with working ✅ / ❌ approvals
-- [x] Command center with live map, 24 camera feeds and per-robot chase cameras
-- [x] Commissioning gate on real GR00T policy trials
+- [x] Supervisor LLM with reasoning, 11 tools and root-cause tickets, sandboxed in NemoClaw
+- [x] Scheduler LLM with Discord cards and working ✅ / ❌ approvals
+- [x] Both models served locally from one vLLM instance, zero cloud calls
+- [x] Code-enforced ticket states and a statistical trust gate
+- [x] Live command center and a 20-robot simulated first deployment
 - [x] One-command Docker deployment with health checks
 
 ### Next
-- [ ] Swap the adapter for other operations: facilities, hospitals, retail, utilities run the same loop
+- [ ] Swap the adapter for other operations: facilities, hospitals, retail and utilities run the same loop
 - [ ] Live calendars and travel time so the scheduler books a real person, not just a slot
-- [ ] Bridge to real robots over ROS 2, with the sim kept as the rehearsal floor
+- [ ] Feed tickets into existing field-service tools instead of replacing them
 
 ---
 
