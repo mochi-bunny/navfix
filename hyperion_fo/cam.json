@@ -1,0 +1,7 @@
+[
+ {"from": 44, "to": 54, "mode": "follow", "robot": 4},
+ {"from": 54, "to": 62, "mode": "follow", "robot": 9},
+ {"from": 62, "to": 70, "mode": "follow", "robot": 13},
+ {"from": 94, "to": 104, "mode": "follow", "robot": 4},
+ {"from": 198, "to": 212, "mode": "follow", "robot": 17}
+]

@@ -1,0 +1,6 @@
+contacts.json
+.env
+runs/
+__pycache__/
+*.mp4
+telemetry.jsonl

@@ -1,0 +1,6 @@
+{
+ "technician": {"name": "Megha", "phone": "+1XXXXXXXXXX", "email": null,
+                "consent": "Relayed by Ferbin in chat, 2026-10-18 ~20:30 ET: Megha consents to Fo calling and emailing her for the Hyperion demo."},
+ "ops_lead":   {"name": "Ferbin", "phone": null, "email": "ops@example.com",
+                "consent": "Ferbin (account owner), 2026-10-18: full access granted."}
+}

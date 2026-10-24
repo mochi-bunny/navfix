@@ -1,0 +1,81 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Hyperion Ops Desk</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { --bg:#0b1216; --card:#111c22; --ink:#e8f0f0; --dim:#8aa0a6; --line:#1f2f37; --ok:#5fe0a0; --warn:#ffb347; --bad:#ff6b5e; --acc:#78ece6; }
+* { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.4 "Inter","DejaVu Sans",system-ui,sans-serif; }
+header { display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--line); }
+h1 { font-size:18px; margin:0; letter-spacing:.3px; } .tag { font:12px "IBM Plex Mono",monospace; padding:3px 8px; border-radius:4px; background:#1a2a31; color:var(--dim); }
+.tag.dry { background:#3a2a10; color:var(--warn); } .tag.live { background:#0f3324; color:var(--ok); }
+main { display:grid; grid-template-columns: 1.25fr 1fr; gap:14px; padding:14px 18px; }
+.cams { display:grid; grid-template-columns: 1fr; gap:10px; } .cams img { width:100%; height:calc((100vh - 190px) / 2); object-fit:cover; border-radius:8px; border:1px solid var(--line); display:block; background:#000; }
+body { height:100vh; overflow:hidden; } .right { overflow:hidden; max-height:calc(100vh - 130px); }
+.camlbl { font:12px "IBM Plex Mono",monospace; color:var(--dim); margin:4px 2px 0; }
+.right { display:flex; flex-direction:column; gap:14px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
+.kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.kpi .n { font-size:28px; font-weight:700; } .kpi .l { color:var(--dim); font-size:12px; }
+.bots { display:grid; grid-template-columns:repeat(10,1fr); gap:5px; margin-top:10px; }
+.bot { text-align:center; font:12px "IBM Plex Mono",monospace; padding:5px 0; border-radius:4px; background:#16323a; }
+.bot.f { background:var(--bad); color:#200; font-weight:700; } .bot.w { background:#3b3220; }
+.inc h2 { font-size:16px; margin:0 0 6px; } .inc .meta { color:var(--dim); font-size:13px; margin-bottom:8px; }
+.steps { list-style:none; margin:0; padding:0; } .steps li { display:flex; gap:10px; padding:6px 0; border-top:1px solid var(--line); }
+.steps .k { min-width:170px; font:13px "IBM Plex Mono",monospace; color:var(--acc); } .steps .v { color:var(--ink); font-size:14px; }
+.steps .ts { margin-left:auto; color:var(--dim); font:12px monospace; }
+.big { font-size:22px; font-weight:700; color:var(--ok); }
+button { background:var(--bad); color:#1a0505; border:0; border-radius:6px; padding:8px 12px; font-weight:700; cursor:pointer; }
+body.compact main { grid-template-columns: 1fr; } body.compact .cams { display:none; } body.compact .kpis { grid-template-columns:repeat(2,1fr); }
+body.compact .bots { grid-template-columns:repeat(10,1fr); } body.compact .steps .k { min-width:130px; font-size:12px; } body.compact header h1 { font-size:16px; }
+body.compact header button { padding:6px 8px; font-size:12px; } body.compact .right { max-height:calc(100vh - 150px); }
+footer { position:fixed; bottom:0; left:0; right:0; background:var(--bg); color:var(--dim); font-size:12px; padding:6px 18px; border-top:1px solid var(--line); }
+.empty { color:var(--dim); }
+</style></head><body>
+<header><h1>HYPERION · Ops Desk</h1><span id="mode" class="tag">…</span><span id="backend" class="tag">…</span><span id="run" class="tag">…</span>
+<span style="margin-left:auto"></span><button onclick="inject()">Inject fault · robot 7</button></header>
+<main>
+  <div class="cams">
+    <div><img id="cam_ov" alt="Isaac Sim overview"><div class="camlbl">NVIDIA ISAAC SIM · live · warehouse overview (20 Nova Carters)</div></div>
+    <div><img id="cam_r" alt="Isaac Sim robot camera"><div class="camlbl" id="camrl">ISAAC SIM · live · follow cam robot 7</div></div>
+  </div>
+  <div class="right">
+  <div class="card"><div class="kpis">
+    <div class="kpi"><div class="n" id="del">–</div><div class="l">deliveries</div></div>
+    <div class="kpi"><div class="n" id="flt">–</div><div class="l">robots faulted</div></div>
+    <div class="kpi"><div class="n" id="wait">–</div><div class="l">robots waiting &gt; 5 s</div></div>
+    <div class="kpi"><div class="n" id="simt">–</div><div class="l">sim clock (s)</div></div>
+  </div><div class="bots" id="bots"></div></div>
+  <div id="incs"></div>
+  </div>
+</main>
+<footer>Robots, faults and technician travel are simulated (NVIDIA Isaac Sim + Hyperion fleet model). Fo's phone call, calendar invite and emails are real.
+Code enforces policy (allowlist, rate limits, no spend, kill switch); the model writes briefs and reads results.</footer>
+<script>
+const LABEL = {escalated:"DETECTED", decision:"WAR ROOM", technician_needed:"BRIEF WRITTEN", precheck:"POLICY CHECK", dry_run:"DRY RUN (not sent)",
+  fo_tool_call:"→ FO", reply:"FO", fo_done:"FO DONE", calling:"CALLING", call_status:"CALL", calendar:"CALENDAR CHECK", posted:"DISCORD", skipped:"DISCORD (off)", call_outcome:"CALL OUTCOME", needs_human:"NEEDS HUMAN", human_approved:"HUMAN APPROVED", technician_en_route:"EN ROUTE", repair_done:"REPAIRED", incident_closed:"CLOSED"};
+function fmt(s){ const d=[];
+  if(s.kind==="fo_tool_call") d.push(s.tool); if(s.status) d.push(s.status); if(s.progress) d.push(s.progress);
+  if(s.decision) d.push(s.decision); if(s.eta_min!=null) d.push(s.eta_min+" min"+(s.fallback_used?" (fallback)":"")); if(s.summary) d.push(s.summary);
+  if(s.why && s.kind==="precheck") d.push((s.ok?"✔ ":"✘ ")+s.why); if(s.seconds) d.push(s.seconds+" s");
+  return d.join(" · "); }
+async function approve(id){ await fetch("/approve",{method:"POST",body:JSON.stringify({incident:id})}); }
+async function inject(){ await fetch("/inject",{method:"POST",body:JSON.stringify({robot:7,fault:"stuck"})}); }
+async function tick(){
+  try{ const s = await (await fetch("/state")).json();
+    mode.textContent = s.dry_run ? "DRY RUN" : "LIVE · real Fo actions"; mode.className = "tag " + (s.dry_run?"dry":"live");
+    backend.textContent = s.backend; run.textContent = s.run;
+    del.textContent = s.deliveries ?? "–"; flt.textContent = s.faulted.length; wait.textContent = s.waiting; simt.textContent = Math.round(s.sim_t);
+    bots.innerHTML = [...Array(s.robots).keys()].map(i => `<div class="bot ${s.faulted.includes(i)?'f':''}">${i}</div>`).join("");
+    const incs = s.incidents.filter(i => s.jobs[i.id] || i.code==="DRIVE_FAULT").slice(-2).reverse();
+    document.getElementById("incs").innerHTML = incs.length ? incs.map(i => {
+      const job = s.jobs[i.id] || {}; const t0 = i.steps.length ? i.steps[0].t_wall : 0;
+      const steps = i.steps.filter(x => LABEL[x.kind] && !(x.kind==="reply" && x.status==="?"));
+      return `<div class="card inc"><h2>${i.id} · robot ${i.robot} · ${i.code}</h2>
+        <div class="meta">${i.summary||""} ${job.state?` · <b>${job.state.toUpperCase()}</b>`:""}${job.eta_min?` · ETA <span class="big">${job.eta_min} min</span>`:""}${job.state==="needs_human"?` <button onclick="approve('${i.id}')">Approve: ops lead takes the repair</button>`:""}</div>
+        <ul class="steps">${steps.slice(-14).map(x => `<li><span class="k">${LABEL[x.kind]}</span><span class="v">${fmt(x)}</span><span class="ts">+${(x.t_wall-t0).toFixed(0)} s</span></li>`).join("")}</ul></div>`;
+    }).join("") : `<div class="card empty">No incidents. Fleet running.</div>`;
+  }catch(e){}
+}
+const COMPACT = location.search.includes("compact");
+if (COMPACT) { document.body.classList.add("compact"); } else { const CAM = "http://127.0.0.1:8212/stream/"; cam_ov.src = CAM + "overview"; cam_r.src = CAM + "robot/7"; }
+setInterval(tick, 1000); tick();
+</script></body></html>
