@@ -1,7 +1,5 @@
 # Hyperion / navfix — codebase rundown
 
-**Written for: you, to understand your own project.** Covers the original Hyperion/FleetOps codebase first, then the two things I added on the `proxy-audit` branch (uncommitted).
-
 ## What it is
 
 Twenty simulated Nova Carter robots work a warehouse. A **supervisor LLM agent** watches live telemetry, decides what needs a human, and opens tickets. A **scheduler bot** (navbot, in Discord) turns tickets into cards people approve with a reaction. Both agents call the same local model (Qwen3.6-35B-A3B-NVFP4 on vLLM). A dashboard shows all of it live. Design rule: **code enforces, models explain** — detection, state transitions and the commissioning gate are plain Python; the LLMs only decide what to say and to whom.
